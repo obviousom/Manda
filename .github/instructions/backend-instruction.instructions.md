@@ -1,0 +1,806 @@
+---
+description: When you are working with Codly Backend this should be always used as a reference for coding style and best practices. It includes guidelines on how to structure your code, naming conventions, and other important aspects to ensure consistency and maintainability across the project.
+applyTo: "Codly_Backend/**"
+---
+
+<!-- Tip: Use /create-instructions in chat to generate content with agent assistance -->
+
+# Codly Backend - Development & Code Review Standards
+
+## Purpose
+
+This file guides GitHub Copilot for both **writing new code** and **reviewing pull requests** in the Codly multi-cloud AI automation platform.
+
+**IMPORTANT** 
+You need to always refer `/docs/PR_REVIEW_GUIDELINES.md` for comprehensive guideline while Code Review
+- If you do any changes in view endpoint input or output ... Please make sure to give .md file for thes changes in `/docs/api/{Feature_Name}` folder with details of change. This will help developer to dump the doc in FrontendC Copliot for changes
+YOU ARE NOT ALLOWED TO MAKE WRITE OPREATIONS IN DB ONLY READ
+- 
+
+IF YOU ARE CREATING A DOCUMENTED ie .md file for anything .... Can you please not dump into root folder ??? and put it in `/docs` folder and maybe create subfolders if needed. It will be easier to maintain and find things in future. 
+---
+
+## ⚠️ ABSOLUTE PROHIBITIONS (Immediate Rejection)
+
+### 1. ❌ NO DIRECT LLM CALLS (CRITICAL)
+- **FORBIDDEN**: `from langchain_openai import ChatOpenAI`
+- **FORBIDDEN**: `from langchain_google_genai import ChatGoogleGenerativeAI`
+- **FORBIDDEN**: `import openai` (direct API calls)
+- **FORBIDDEN**: `from llm.langchain.llm_helper import LangChainModelFactory` (in feature code)
+- **REQUIRED**: ONLY use `MaskedReactAgentBuilder`, `ReactSwarmAgents`, or `ChatSession`
+- **WHY**: Bypasses PII masking/unmasking, credential protection, centralized model config
+
+### 2. ❌ NO FILES OVER 1500 LINES (BREAKS CI/CD)
+- **HARD LIMIT**: 1500 lines per Python file (CI/CD pipeline WILL FAIL)
+- **PROACTIVE SPLIT**: When approaching 800 lines
+- **TARGET LIMITS**: Views < 300, Tools < 500, Managers < 1000
+- **CHECK**: `wc -l <file>` before commit
+
+### 3. ❌ NO HARDCODED VALUES
+- **FORBIDDEN**: Hardcoded regions (`"us-east-1"`, `"eastus"`)
+- **FORBIDDEN**: Hardcoded customer/account IDs (`123`, `456789012`)
+- **FORBIDDEN**: Hardcoded credentials/API keys
+- **FORBIDDEN**: Hardcoded exchange rates (`88.51`, `0.012`)
+- **FORBIDDEN**: Hardcoded dates/years (`2025`, `"2024-12-01"`)
+- **FORBIDDEN**: Hardcoded bucket/container names
+- **FORBIDDEN**: Hardcoded email addresses
+- **FORBIDDEN**: Hardcoded threshold values
+- **REQUIRED**: Use `settings.py`, `account.region`, `datetime.now()`, etc.
+
+### 4. ❌ NO CLOUD-SPECIFIC CODE WITHOUT ABSTRACTION
+- **REQUIRED**: Every cloud feature MUST have `base/` abstract class with `@abstractmethod`
+- **REQUIRED**: Every cloud feature MUST have `providers/` implementations (AWS, Azure)
+- **REQUIRED**: Use factory pattern for provider selection
+- **FORBIDDEN**: Cloud SDK calls directly in views or agents
+- **FORBIDDEN**: Provider-specific logic outside `providers/` directory
+
+### 5. ❌ NO MISSING AUTHENTICATION
+- **REQUIRED**: ALL views MUST have `@authentication_classes` decorator
+- **REQUIRED**: ALL views MUST have `@permission_classes` decorator
+- **FRONTEND**: Use `CookieJWTAuthentication` + `CustomIsAuthenticated`
+- **ADMIN**: Use `CookieJWTAdminAuthentication` + `CustomIsAdminAuthenticated`
+- **DUAL**: Use both authentication classes with type checking
+
+### 6. ❌ NO PROMPTS IN CODE
+- **REQUIRED**: ALL prompts MUST be in `.md` files in `prompts/` directory
+- **REQUIRED**: Load prompts using `load_prompt()` from `llm.utils.prompt_loader`
+- **FORBIDDEN**: Multi-line string prompts in Python code
+- **FORBIDDEN**: F-strings or `.format()` for entire prompts
+
+### 7. ❌ NO UNMASKED PII TO LLMs
+- **REQUIRED**: ALL LLM calls MUST use MaskedReactAgentBuilder (auto-masks)
+- **FORBIDDEN**: Sending raw customer data to LLMs without masking
+- **FORBIDDEN**: Direct LLM API calls (cannot mask PII)
+
+---
+
+## ✅ MANDATORY REQUIREMENTS
+
+### Model Category Specification
+- **REQUIRED**: ALL agents MUST specify `category` parameter
+- **OPTIONS**: `"low"`, `"default"/"medium"`, `"high"`
+- **low**: Simple classification, yes/no decisions, basic queries
+- **medium**: Standard analysis, cost breakdowns, resource listing
+- **high**: Complex reasoning, multi-step workflows, code generation, deep analysis
+- **FORBIDDEN**: Omitting category (will use wrong model tier)
+
+### Error Handling
+- **REQUIRED**: ALL cloud API calls MUST have `try/except` with `ClientError`
+- **REQUIRED**: Use `logger.exception()` for unexpected errors
+- **REQUIRED**: Return user-friendly error messages
+- **FORBIDDEN**: Exposing internal error details to users
+- **FORBIDDEN**: Silent failures (must log errors)
+
+### Multi-Tenant Isolation
+- **REQUIRED**: ALL database queries MUST filter by `customer` or `account`
+- **REQUIRED**: Validate user has access to requested resource
+- **FORBIDDEN**: `.objects.all()` without customer filter
+- **FORBIDDEN**: Trusting user-provided IDs without validation
+- **FORBIDDEN**: Cross-tenant data exposure
+
+### Credential Management
+- **REQUIRED**: Use `create_cloud_cred_loader()` for all cloud credentials
+- **REQUIRED**: Call `.load_db_credentials()` before `.get_env_values()`
+- **REQUIRED**: Pass credentials to cloud SDKs explicitly
+- **FORBIDDEN**: `os.getenv()` for cloud credentials
+- **FORBIDDEN**: Hardcoded credentials anywhere
+- **FORBIDDEN**: Credentials in logs
+
+---
+
+## 🏗️ ARCHITECTURE REQUIREMENTS
+
+### Multi-Cloud Feature Structure (MANDATORY)
+```
+feature_name/
+├── __init__.py
+├── views.py                    # API endpoints (< 300 lines)
+├── agent.py                    # Agent orchestration
+├── base/
+│   ├── __init__.py
+│   └── feature_manager.py      # Abstract base class with @abstractmethod
+├── providers/
+│   ├── __init__.py
+│   ├── aws_manager.py          # AWS implementation
+│   └── azure_manager.py        # Azure implementation (can be stub)
+├── tools/
+│   ├── __init__.py
+│   ├── common_tools.py         # Provider-agnostic tools
+│   ├── aws_tools.py            # AWS-specific tools
+│   └── azure_tools.py          # Azure-specific tools (can be stub)
+├── prompts/
+│   ├── AWSFeature.md           # AWS-specific prompts
+│   └── AzureFeature.md         # Azure-specific prompts (can be stub)
+└── utils/
+    ├── __init__.py
+    └── helpers.py
+```
+
+### Abstract Base Class Requirements
+- **REQUIRED**: Inherit from `ABC`
+- **REQUIRED**: Use `@abstractmethod` for all cloud-specific methods
+- **REQUIRED**: Accept `credentials_loader`, `customer`, `account` in `__init__`
+- **REQUIRED**: Define consistent interface for all providers
+- **FORBIDDEN**: Implementation details in base class
+
+### Provider Implementation Requirements
+- **REQUIRED**: Inherit from abstract base class
+- **REQUIRED**: Implement ALL abstract methods
+- **ALLOWED**: Stub implementations with `raise NotImplementedError("Azure support coming soon")`
+- **REQUIRED**: Initialize cloud SDK client in `__init__`
+- **REQUIRED**: Use `self.credentials_loader.get_env_values()` for credentials
+
+### Factory Pattern Requirements
+- **REQUIRED**: Provider selection based on `account.cloud_provider`
+- **REQUIRED**: Raise `ValueError` for unsupported providers
+- **REQUIRED**: Return provider-specific manager instance
+- **LOCATION**: In `agent.py` or `views.py`
+
+---
+
+## 🔐 AUTHENTICATION RULES
+
+### Two Separate Authentication Systems
+**Frontend/Customer APIs**:
+- **CLASSES**: `CookieJWTAuthentication`, `CustomIsAuthenticated`
+- **ACCESS**: `request.user` is `User` instance
+- **ACCESS**: `request.user.customer` for customer context
+- **SCOPE**: Customer can only access their own data
+
+**Admin Portal APIs**:
+- **CLASSES**: `CookieJWTAdminAuthentication`, `CustomIsAdminAuthenticated`
+- **ACCESS**: `request.user` is `AdminUser` instance
+- **ACCESS**: Can access any customer's data via `customer_id` parameter
+- **SCOPE**: Admin has cross-customer access
+
+**Dual Access APIs**:
+- **CLASSES**: Both auth classes in list
+- **REQUIRED**: Type checking with `isinstance(request.user, AdminUser)`
+- **LOGIC**: Separate code paths for admin vs customer
+
+### Cookie Management
+- **REQUIRED**: Set `httponly=True` for all auth cookies
+- **REQUIRED**: Set `secure=True` in production
+- **REQUIRED**: Set `samesite='Lax'` or `'Strict'`
+- **FORBIDDEN**: Storing sensitive data in cookies
+
+---
+
+## Security Critical Patterns
+
+### Credential Management
+
+**When writing**: ALWAYS use credentials_management module:
+
+```python
+from manage_user.credentials_management import create_cloud_cred_loader
+
+# Step 1: Create loader
+cred_loader = create_cloud_cred_loader(
+    account.cloud_provider,  # First positional argument
+    user=request.user,
+    account=account,
+    customer=customer
+)
+
+# Step 2: Load credentials (MANDATORY before using)
+cred_loader.load_db_credentials()
+
+# Step 3: Get environment variables
+env_vars = cred_loader.get_env_values()
+# Returns dict with: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN (if temp creds)
+
+# Step 4: Use with cloud SDKs
+client = boto3.client('ec2',
+    region_name='us-east-1',  # Pass region explicitly (NOT from account.region - field doesn't exist)
+    aws_access_key_id=env_vars['AWS_ACCESS_KEY_ID'],
+    aws_secret_access_key=env_vars['AWS_SECRET_ACCESS_KEY'],
+    aws_session_token=env_vars.get('AWS_SESSION_TOKEN')  # For temporary credentials
+)
+```
+
+**Region Handling Pattern**:
+When passing credentials to cloud SDKs, always extract region from the request context or use a sensible default. The Account model does NOT have a region field:
+
+```python
+# ✅ CORRECT - Region from request/context
+region = request.data.get('region', 'us-east-1')  # User provides or default
+credential_context = {
+    'region': region,  # Thread through context
+    ...
+}
+
+# ❌ FORBIDDEN - Accessing non-existent field
+region = account.region  # Account model has no region field!
+```
+
+**Never**:
+```python
+# ❌ FORBIDDEN - Direct credentials
+client = boto3.client('ec2',
+    aws_access_key_id='AKIAIOSFODNN7EXAMPLE',
+    aws_secret_access_key='wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY'
+)
+
+# ❌ FORBIDDEN - Environment variables directly
+import os
+key = os.getenv('AWS_ACCESS_KEY_ID')
+```
+
+### Multi-Tenant Isolation (CRITICAL)
+
+**When writing**: EVERY database query MUST filter by customer/account:
+
+```python
+# ✅ CORRECT - Filtered by customer
+def get_customer_scans(customer):
+    scans = ComplianceScan.objects.filter(customer=customer)
+    return scans
+
+# ✅ CORRECT - Validate ownership
+def get_scan_detail(scan_id, customer):
+    try:
+        scan = ComplianceScan.objects.get(id=scan_id, customer=customer)
+    except ComplianceScan.DoesNotExist:
+        raise PermissionDenied("Scan not found")
+    return scan
+
+# ❌ FORBIDDEN - No customer filter
+def get_all_scans():
+    return ComplianceScan.objects.all()  # Data leak!
+
+# ❌ FORBIDDEN - Trust user input without validation
+def get_scan(scan_id):
+    return ComplianceScan.objects.get(id=scan_id)  # Any customer's scan!
+```
+
+**When reviewing**: Flag any query without customer/account filter
+
+### Centralized Storage (CRITICAL)
+
+**When writing**: ALWAYS use `StorageConfig` for all file uploads, downloads, and URL generation:
+
+```python
+from common.StorageConfig import StorageConfig
+
+# ✅ CORRECT - Use StorageConfig for all storage operations
+storage = StorageConfig(customer)  # Loads provider from DB automatically
+
+# Upload bytes content and get presigned URL
+result = storage.upload(
+    content=b"file content",
+    key="compliance/deviations/123/proof.pdf",
+    ttl_hours=1,
+    content_type="application/pdf"
+)
+presigned_url = result['presigned_url']  # Time-limited download URL
+storage_key = result['key']              # Store THIS in DB, not the URL
+
+# Upload from file-like object (Django request.FILES)
+result = storage.upload_fileobj(
+    fileobj=request.FILES['upload'],
+    key="reports/2024_report.xlsx",
+    ttl_hours=24,
+    content_type="application/vnd.openxmlformats-officedocument.spreadsheet+xml"
+)
+
+# Upload from disk
+result = storage.upload_file(
+    filepath="/tmp/diagram.png",
+    key="diagrams/architecture.png",
+    ttl_hours=24,
+    content_type="image/png"
+)
+
+# Generate presigned URL at READ time (never store URLs in DB)
+storage_key = deviation.proof_storage_key  # Store keys, NOT URLs
+presigned_url = StorageConfig(customer).generate_presigned_url(
+    key=storage_key,
+    ttl_hours=1
+)
+
+# Delete from storage
+StorageConfig(customer).delete(key=storage_key)
+```
+
+
+**Never**:
+```python
+# ❌ FORBIDDEN - Raw boto3 uploads
+s3 = boto3.client('s3', ...)
+s3.upload_fileobj(file, bucket, key)
+presigned_url = s3.generate_presigned_url(...)
+# Store presigned_url in DB  ← DEAD URL after expiry!
+
+
+
+## No Hardcoded Values
+
+**When writing**: Use configuration and context, never hardcode:
+
+```python
+# ✅ CORRECT
+region = request_context.get('region', 'us-east-1')  # Pass region via request/context
+customer_id = request.user.customer.id
+exchange_rate = settings.USD_TO_INR_RATE
+current_year = datetime.now().year
+
+# ❌ FORBIDDEN
+region = "us-east-1"  # Hardcoded region
+region = account.region  # account.region field doesn't exist!
+customer_id = 123
+exchange_rate = 88.51
+current_year = 2025
+```
+
+**Common hardcoded values to avoid**:
+- AWS Regions: Pass via request payload or context (Account model doesn't have region field)
+- Azure Regions: `"eastus"`, `"westeurope"`
+- Account IDs: `123456789012`
+- API Keys/Secrets
+- Email addresses
+- Bucket/Container names
+- Exchange rates
+- Date strings
+- Threshold values
+
+---
+
+## View Design Patterns
+
+### Views are Routing Layer ONLY
+
+**When writing** a view, it should ONLY:
+
+```python
+@api_view(['POST'])
+@authentication_classes([CookieJWTAuthentication])
+@permission_classes([CustomIsAuthenticated])
+def feature_view(request):
+    """Thin view - delegates all logic."""
+    
+    # 1. Extract & validate request data
+    session_id = request.data.get('session_id')
+    customer_id = request.data.get('customer_id')
+    account_id = request.data.get('account_id')
+    user_input = request.data.get('input')
+    
+    if not all([session_id, customer_id, account_id, user_input]):
+        return JsonResponse({'error': 'Missing fields'}, status=400)
+    
+    # 2. Get context objects with validation
+    try:
+        customer = Customer.objects.get(id=customer_id)
+        account = Account.objects.get(id=account_id, customer=customer)
+    except (Customer.DoesNotExist, Account.DoesNotExist):
+        return JsonResponse({'error': 'Invalid customer/account'}, status=404)
+    
+    # 3. Load credentials
+    cred_loader = create_cloud_cred_loader(
+        cloud_provider=account.cloud_provider,
+        user=request.user,
+        account=account,
+        customer=customer
+    )
+    cred_loader.load_db_credentials()
+    
+    # 4. Delegate to agent/manager (ALL business logic here)
+    try:
+        result = execute_feature_agent(
+            user_input=user_input,
+            session_id=session_id,
+            customer=customer,
+            account=account,
+            cred_loader=cred_loader,
+            user=request.user
+        )
+    except Exception as e:
+        logger.exception(f"Feature execution failed: {e}")
+        return JsonResponse({'error': 'Operation failed'}, status=500)
+    
+    # 5. Return response
+    return JsonResponse(result, status=200)
+```
+
+**Views should NOT contain**:
+- Cloud SDK operations (boto3, azure-sdk calls)
+- LLM agent creation or invocation
+- Complex data transformations
+- Business logic (> 10 lines is a red flag)
+- Database operations beyond simple lookups
+- Prompt definitions
+
+**When reviewing**: Flag views > 300 lines or with business logic
+
+---
+
+## Agent & Tool Development
+
+### Prompt Management
+
+**When writing**: Prompts MUST be in .md files:
+
+```python
+from llm.utils.prompt_loader import load_prompt
+
+# ✅ CORRECT - Load from .md file
+prompt = load_prompt("chatbot/finops/cost_analytics/prompts/AWSCostAnalysis.md")
+
+# Inject runtime values
+prompt = prompt.replace("{{UTC_NOW}}", utc_now_iso())
+prompt = prompt.replace("{{CUSTOMER_NAME}}", customer.name)
+
+# ❌ FORBIDDEN - Hardcoded prompts
+prompt = """
+You are an AI cost analysis expert.
+Analyze the following data...
+"""
+```
+
+**Prompt file structure** (prompts/AWSCostAnalysis.md):
+```markdown
+You are an AWS cost analysis expert for {{CUSTOMER_NAME}}.
+
+Current UTC: {{UTC_NOW}}
+
+## Available Tools
+
+- get_cost_by_service(): Retrieve service-level cost breakdown
+- get_cost_anomalies(): Detect cost spikes and anomalies
+
+## Output Format
+
+Return structured JSON with:
+{
+  "summary": "Brief overview",
+  "recommendations": ["List of suggestions"]
+}
+```
+
+### Tool Development Pattern
+
+**When writing**: Tools MUST use @tool decorator:
+
+```python
+from langchain_core.tools import tool
+from typing import Dict, List
+
+# Create tools with context via closure
+def create_cost_tools(cost_manager, account, customer):
+    """Factory function to inject context into tools."""
+    
+    @tool
+    def get_cost_by_service(days: int = 30) -> List[Dict]:
+        """
+        Retrieve cost breakdown by service for the last N days.
+        
+        Args:
+            days: Number of days to analyze (default: 30, max: 365)
+            
+        Returns:
+            List of dicts with service_name, cost_usd, cost_inr
+        """
+        # Context (cost_manager, account) available via closure
+        costs = cost_manager.get_cost_by_service(days=days)
+        return costs
+    
+    @tool
+    def get_cost_anomalies(threshold: float = 20.0) -> Dict:
+        """
+        Detect cost anomalies and unusual spending patterns.
+        
+        Args:
+            threshold: Percentage increase to flag as anomaly
+            
+        Returns:
+            Dict with anomalies list and summary
+        """
+        anomalies = cost_manager.detect_anomalies(threshold=threshold)
+        return {
+            "anomalies": anomalies,
+            "count": len(anomalies),
+            "customer": customer.name
+        }
+    
+    return [get_cost_by_service, get_cost_anomalies]
+```
+
+**Tool Requirements**:
+- Use `@tool` decorator
+- Clear docstring (LLM reads this)
+- Type hints on parameters and return
+- Inject context via closure (not globals)
+- Return structured data (dict/list preferred)
+- Handle errors gracefully
+
+**When reviewing**: Verify all tools have @tool decorator and docstrings
+
+---
+
+## Performance Patterns
+
+### Database Query Optimization
+
+**When writing**: Avoid N+1 queries:
+
+```python
+# ❌ BAD - N+1 queries
+scans = ComplianceScan.objects.filter(customer=customer)
+for scan in scans:
+    print(scan.account.name)      # Extra query per scan!
+    print(scan.environment.name)  # Another query!
+
+# ✅ GOOD - Optimized with select_related
+scans = ComplianceScan.objects.filter(customer=customer).select_related(
+    'account',
+    'environment'
+)
+for scan in scans:
+    print(scan.account.name)      # No extra query
+    print(scan.environment.name)  # No extra query
+
+# ✅ GOOD - prefetch_related for ManyToMany
+scans = ComplianceScan.objects.filter(customer=customer).prefetch_related(
+    'compliance_points'
+)
+```
+
+### Caching Strategy
+
+**When writing**: Cache expensive operations:
+
+```python
+from django.core.cache import cache
+
+def get_customer_llm_config(customer_id, category):
+    """Get LLM config with caching."""
+    cache_key = f"llm_config_{customer_id}_{category}"
+    config = cache.get(cache_key)
+    
+    if config is None:
+        # Expensive DB query
+        config = LargeLanguageModel.objects.filter(
+            customer_id=customer_id,
+            category=category,
+            is_active=True
+        ).first()
+        # Cache for 1 hour
+        cache.set(cache_key, config, timeout=3600)
+    
+    return config
+```
+
+**Caching Guidelines**:
+- LLM configs: 1 hour TTL
+- Customer credentials: 15 minutes TTL
+- Static data: 24 hours TTL
+- Real-time data: Don't cache
+- User sessions: Don't cache
+
+### Background Tasks
+
+**When writing**: Use appropriate async pattern:
+
+```python
+from common.background_tasks import run_in_background
+from celery import shared_task
+
+# Quick task (< 30 seconds) - use run_in_background
+def send_notification(user_id, message):
+    # Quick email send
+    run_in_background(send_email, user_id, message)
+
+# Long task (> 30 seconds) - use Celery
+@shared_task(bind=True)
+def compliance_scan_task(self, scan_id, account_id):
+    """Long-running compliance scan with progress updates."""
+    from common.background_tasks import send_websocket_update
+    
+    # Step 1
+    send_websocket_update(scan_id, "progress", {"stage": "analyzing", "percent": 20})
+    analyze_resources()
+    
+    # Step 2
+    send_websocket_update(scan_id, "progress", {"stage": "scanning", "percent": 60})
+    run_compliance_checks()
+    
+    # Step 3
+    send_websocket_update(scan_id, "complete", {"status": "success"})
+```
+
+---
+
+## Error Handling Patterns
+
+### Cloud Operations
+
+**When writing**: ALWAYS wrap cloud API calls:
+
+```python
+from botocore.exceptions import ClientError
+import logging
+
+logger = logging.getLogger(__name__)
+
+def get_ec2_instances(ec2_client):
+    """Get EC2 instances with proper error handling."""
+    try:
+        response = ec2_client.describe_instances()
+        instances = parse_instances(response)
+        return {"success": True, "instances": instances}
+    
+    except ClientError as e:
+        error_code = e.response['Error']['Code']
+        
+        if error_code == 'UnauthorizedOperation':
+            logger.warning(f"Permission denied for EC2 describe: {e}")
+            return {"error": "Insufficient permissions"}
+        
+        elif error_code == 'InvalidInstanceID.NotFound':
+            logger.info(f"Instance not found: {e}")
+            return {"error": "Instance not found"}
+        
+        else:
+            logger.exception(f"EC2 API error: {e}")
+            return {"error": "Failed to retrieve instances"}
+    
+    except Exception as e:
+        logger.exception(f"Unexpected error in get_ec2_instances: {e}")
+        return {"error": "Internal error occurred"}
+```
+
+**Error Handling Rules**:
+- Always use try/except for cloud SDKs
+- Log with context (logger.exception)
+- Return user-friendly error messages
+- Never expose internal errors to users
+- Handle specific exceptions when possible
+
+---
+
+
+
+**When reviewing**: Verify tests exist for new features
+
+**IMPORTANT** 
+You need to always refer `/docs/PR_REVIEW_GUIDELINES.md` for comprehensive guideline while Code Review
+---
+
+## Common Imports Reference
+
+
+```python
+# Authentication
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from manage_user.authentication import CookieJWTAuthentication
+from manage_user.views import CustomIsAuthenticated
+from admin_portal.views import CookieJWTAdminAuthentication, CustomIsAdminAuthenticated
+
+# Credentials
+from manage_user.credentials_management import (
+    create_cloud_cred_loader,
+    AWSCloudCredentials,
+    AzureCloudCredentials
+)
+
+# LLM & Agents (ONLY use these for LLM)
+from llm.masked_react_agent import MaskedReactAgentBuilder
+from llm.multi_react_agent_swarm import ReactSwarmAgents
+from llm.open_ai import ChatSession
+from llm.utils.prompt_loader import load_prompt
+
+# Cloud Execution
+from common.executor.cloud_script import AWSScriptExecutor, AzureScriptExecutor
+
+# Storage
+from common.StorageConfig import StorageConfig
+
+# Background Tasks
+from common.background_tasks import run_in_background, send_websocket_update
+from celery import shared_task
+
+# Caching
+from django.core.cache import cache
+
+# Tools
+from langchain.tools import tool,ToolRuntime
+
+# LangGraph
+from langgraph.graph import StateGraph
+
+# Models
+from manage_user.models import Customer, Account, User, AdminUser
+from chatbot.models.models import Session, ConversationHistory
+from compliance.models import ComplianceScan, CompliancePoint
+
+# Logging
+import logging
+logger = logging.getLogger(__name__)
+```
+
+---
+
+## 🔍 DB Inspection (Debugging & Verification)
+
+When you need to inspect the database to debug, verify data, or understand what's stored — use `uv run python` with an inline Django shell script. **Never guess what's in the DB — query it.**
+If u are running the django applicaiton, it may take time to start the app . So use timeout or something so u wait for it 
+
+### Command pattern
+
+```bash
+cd /home/user3/Codly_Backend && uv run python - << 'EOF'
+import django, os
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'Codly_AI_Langraph.settings')
+django.setup()
+
+# --- your queries here ---
+from manage_user.models import Customer
+customer = Customer.objects.filter(name="Codly").first()
+print(customer)
+EOF
+```
+
+
+
+
+
+**Inspect tickets:**
+```python
+from ticket_management.models import Ticket
+
+tickets = Ticket.objects.select_related('account', 'customer').order_by('-created_at')[:5]
+for t in tickets:
+    print(f"  {t.ticket_id} | {t.category} | {t.sub_category} | account={t.account} | region={t.region}")
+```
+
+### Rules
+- **Always run DB queries** before assuming what data exists — don't guess
+- Use `select_related` / `prefetch_related` to avoid N+1 queries in scripts
+- Use `filter(customer=customer)` — never skip tenant isolation even in debug scripts
+- The settings module is always `Codly_AI_Langraph.settings`
+- The venv is managed by `uv` — always use `uv run python`, never `python` directly
+
+---
+
+## Priority Guidelines
+
+**When writing**:
+1. Security first (credentials, multi-tenant)
+2. Keep files under limits
+3. Follow multi-cloud patterns
+4. Optimize performance from start
+5. Write tests alongside code
+
+**When reviewing**:
+1. **Security**: Credentials, multi-tenant isolation, hardcoded values
+2. **Usage of Core modules**: LLM patterns, credential management, background tasks, caching, storage , common utils etc
+2. **Breaking**: 1500-line limit, missing authentication
+3. **Architecture**: Multi-cloud structure, LLM patterns compliance
+4. **Performance**: N+1 queries, missing cache
+5. **Quality**: Naming, error handling, tests
+
+---
+
+**Reference**: `/docs/PR_REVIEW_GUIDELINES.md` for comprehensive details (2300+ lines)
+
+**Always prioritize**: Security vulnerabilities > Multi-tenant issues > File size limits > Architecture violations

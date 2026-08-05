@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Codly Dev
+Comment=Open the Codly tunnel, backend, and frontend
+Exec=/home/lenovo/Manda/launch_codly_desktop.sh
+Path=/home/lenovo/Manda
+Icon=/home/lenovo/Manda/Codly_Backend/assets/Codly_Logopng.png
+Terminal=false
+Categories=Development;
+StartupNotify=true
