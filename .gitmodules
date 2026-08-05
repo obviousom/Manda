@@ -1,9 +1,11 @@
 [submodule "Codly-Frontend"]
 	path = Codly-Frontend
 	url = https://github.com/Codly-AI/Codly-Frontend
+	branch = fix/policy-override-threshold-frontend
 [submodule "codly-admin-portal"]
 	path = codly-admin-portal
 	url = https://github.com/Codly-AI/codly-admin-portal
 [submodule "Codly_Backend"]
 	path = Codly_Backend
 	url = https://github.com/Codly-AI/Codly_Backend
+	branch = fix/policy-override-threshold-production-ready
