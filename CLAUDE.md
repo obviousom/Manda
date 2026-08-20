@@ -84,6 +84,7 @@ Load with `Skill` tool. **Load the relevant skill before writing any code.**
 |`chatbot/finops/` — cost analytics, reports|`backend-finops`|
 |`chatbot/log\_analytics/` — CloudTrail, VPC, ALB|`backend-log-analytics`|
 |`chatbot/os\_hardening/` — CIS/STIG, SSH execution|`backend-os-hardening`|
+|`runbooks/` — step runners, executor, triggers, live runs|`backend-runbooks`|
 |File upload/download S3/Blob|`backend-storage`|
 |`agent\_hub/` — user-defined / MCP agents|`backend-agent-hub`|
 |PR review / code audit|`backend-pr-review`|

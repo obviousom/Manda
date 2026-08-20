@@ -24,6 +24,7 @@ All skills live in `.claude/skills/codly/`. Use the `Skill` tool to load them.
 | `backend-finops` | FinOps/cost analytics, multi-cloud cost agents, report generation |
 | `backend-log-analytics` | Log analysis agents, CloudTrail/VPC/ALB/Azure Monitor |
 | `backend-os-hardening` | CIS/STIG scan and execution, SSH remote execution |
+| `backend-runbooks` | RunBook engine — step runners, executor loop, triggers, WebSocket live runs |
 | `backend-storage` | `StorageConfig` S3/Azure Blob upload/download |
 | `backend-agent-hub` | User-defined agents, MCP agents, marketplace |
 | `backend-pr-review` | PR review checklist, common anti-patterns, rejection criteria |
