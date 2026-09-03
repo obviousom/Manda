@@ -1,0 +1,607 @@
+<title>The Waste Rulebook</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --ink: #1B2030; --ink-soft: #48506A; --muted: #6C7488;
+    --paper: #EEF0F5; --surface: #FFFFFF; --surface-2: #F5F6FA;
+    --line: #DBDFE8; --line-soft: #E8EAF1;
+    --accent: #33509C; --accent-soft: #E5EBFA;
+    --code-bg: #EEF1F8;
+    --terminate: #B23B33; --terminate-soft: #F7E7E5;
+    --review: #9C7A22; --review-soft: #F5EFDD;
+    --monitor: #2C6E88; --monitor-soft: #E3F0F4;
+    --keep: #2E7D50; --keep-soft: #E4F3EA;
+    --aws: #B85C1D; --aws-soft: #F8EBDD;
+    --azure: #2A5FAE; --azure-soft: #E3ECFA;
+    --new: #6B4FA0; --new-soft: #EEE8F7;
+    --shadow: 0 1px 2px rgba(27,32,48,0.05), 0 8px 24px rgba(27,32,48,0.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ink: #E7E9F0; --ink-soft: #B7BDD0; --muted: #868EA6;
+      --paper: #13151C; --surface: #1B1E28; --surface-2: #21242F;
+      --line: #2C303D; --line-soft: #262A35;
+      --accent: #86A6EE; --accent-soft: #212A42;
+      --code-bg: #1F2330;
+      --terminate: #E38A7F; --terminate-soft: #33221F;
+      --review: #D9B45D; --review-soft: #322A18;
+      --monitor: #79C1DE; --monitor-soft: #17262C;
+      --keep: #74CE9B; --keep-soft: #17281E;
+      --aws: #E39A55; --aws-soft: #2F2417;
+      --azure: #7FA6E8; --azure-soft: #1B2536;
+      --new: #B49AE0; --new-soft: #251E32;
+      --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ink: #E7E9F0; --ink-soft: #B7BDD0; --muted: #868EA6;
+    --paper: #13151C; --surface: #1B1E28; --surface-2: #21242F;
+    --line: #2C303D; --line-soft: #262A35;
+    --accent: #86A6EE; --accent-soft: #212A42;
+    --code-bg: #1F2330;
+    --terminate: #E38A7F; --terminate-soft: #33221F;
+    --review: #D9B45D; --review-soft: #322A18;
+    --monitor: #79C1DE; --monitor-soft: #17262C;
+    --keep: #74CE9B; --keep-soft: #17281E;
+    --aws: #E39A55; --aws-soft: #2F2417;
+    --azure: #7FA6E8; --azure-soft: #1B2536;
+    --new: #B49AE0; --new-soft: #251E32;
+    --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.35);
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: 'IBM Plex Sans', system-ui, sans-serif; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+  ::selection { background: var(--accent-soft); }
+  code, .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+  .tab { font-variant-numeric: tabular-nums; }
+
+  a { color: var(--accent); }
+
+  /* ===== Header ===== */
+  header.hero {
+    max-width: 1180px; margin: 0 auto; padding: 52px 28px 30px;
+    border-bottom: 1px solid var(--line);
+  }
+  .eyebrow { font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+  h1 { font-family: 'Fraunces', Georgia, serif; font-optical-sizing: auto; font-weight: 600; font-size: 42px; line-height: 1.08; letter-spacing: -0.01em; margin: 0 0 14px; text-wrap: balance; }
+  .dek { font-size: 16px; color: var(--ink-soft); max-width: 68ch; margin: 0; }
+  .stat-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 26px; }
+  .stat { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 10px 16px; box-shadow: var(--shadow); }
+  .stat .num { font-family: 'Fraunces', serif; font-weight: 600; font-size: 22px; }
+  .stat .lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
+
+  /* ===== Framing section ===== */
+  section.framing {
+    max-width: 1180px; margin: 0 auto; padding: 34px 28px 10px;
+  }
+  .framing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .fcard { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 18px 20px; box-shadow: var(--shadow); }
+  .fcard h3 { font-family: 'Fraunces', serif; font-weight: 600; font-size: 15px; margin: 0 0 8px; }
+  .fcard p { font-size: 13px; color: var(--ink-soft); margin: 0 0 8px; }
+  .fcard p:last-child { margin-bottom: 0; }
+  .ladder { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; margin-top: 10px; }
+  .ladder .seg { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; font-weight: 600; padding: 3px 7px; border-radius: 4px; white-space: nowrap; }
+  .ladder .arrow { color: var(--muted); font-size: 11px; }
+  .seg.keep { background: var(--keep-soft); color: var(--keep); }
+  .seg.monitor { background: var(--monitor-soft); color: var(--monitor); }
+  .seg.review { background: var(--review-soft); color: var(--review); }
+  .seg.terminate { background: var(--terminate-soft); color: var(--terminate); }
+
+  /* ===== Controls ===== */
+  .controls {
+    max-width: 1180px; margin: 26px auto 0; padding: 0 28px;
+    display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+    position: sticky; top: 0; z-index: 5; background: var(--paper);
+    padding-top: 14px; padding-bottom: 14px; border-bottom: 1px solid var(--line-soft);
+  }
+  .filter-group { display: flex; gap: 6px; }
+  .filter-btn {
+    font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 500;
+    padding: 6px 13px; border-radius: 999px; border: 1px solid var(--line);
+    background: var(--surface); color: var(--ink-soft); cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+  }
+  .filter-btn:hover { border-color: var(--accent); }
+  .filter-btn.active { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+  .filter-btn.active[data-cloud="aws"] { background: var(--aws); border-color: var(--aws); }
+  .filter-btn.active[data-cloud="azure"] { background: var(--azure); border-color: var(--azure); }
+  .catnav { display: flex; gap: 4px; flex-wrap: wrap; font-size: 12px; }
+  .catnav a { color: var(--muted); text-decoration: none; padding: 4px 8px; border-radius: 5px; }
+  .catnav a:hover { color: var(--accent); background: var(--accent-soft); }
+  .result-count { margin-left: auto; font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: var(--muted); }
+
+  /* ===== Main ===== */
+  main { max-width: 1180px; margin: 0 auto; padding: 8px 28px 80px; }
+  .category { padding-top: 40px; scroll-margin-top: 90px; }
+  .category h2 {
+    font-family: 'Fraunces', serif; font-weight: 600; font-size: 24px; margin: 0 0 4px;
+    display: flex; align-items: baseline; gap: 10px;
+  }
+  .category .cat-count { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--muted); font-weight: 400; }
+  .category .cat-note { font-size: 13px; color: var(--muted); margin: 0 0 18px; max-width: 70ch; }
+
+  .card-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  @media (max-width: 880px) { .card-grid, .framing-grid { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+    box-shadow: var(--shadow); overflow: hidden; display: flex; flex-direction: column;
+  }
+  .card-head {
+    background: var(--surface-2); padding: 14px 18px; border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  }
+  .cloud-badge {
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 700;
+    padding: 2px 7px; border-radius: 4px; letter-spacing: 0.03em; flex-shrink: 0;
+  }
+  .cloud-badge.aws { background: var(--aws-soft); color: var(--aws); }
+  .cloud-badge.azure { background: var(--azure-soft); color: var(--azure); }
+  .card-head h3 { font-family: 'Fraunces', serif; font-weight: 600; font-size: 16.5px; margin: 0; flex: 1; min-width: 140px; text-wrap: balance; }
+  .field-badge {
+    font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; text-transform: uppercase;
+    letter-spacing: 0.04em; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 2px 6px;
+  }
+  .page-key { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--muted); }
+  .badge-flag {
+    font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; font-weight: 700;
+    padding: 2px 7px; border-radius: 4px; background: var(--new-soft); color: var(--new);
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .badge-flag.gap { background: var(--terminate-soft); color: var(--terminate); }
+
+  .card-body { padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; flex: 1; }
+
+  .subkind { border-top: 1px dashed var(--line-soft); padding-top: 10px; margin-top: 2px; }
+  .subkind:first-child { border-top: none; padding-top: 0; margin-top: 0; }
+  .subkind-label { font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; font-weight: 600; color: var(--ink); margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+  .pt-pill { font-size: 9px; font-family: 'IBM Plex Mono', monospace; padding: 1px 6px; border-radius: 999px; font-weight: 600; }
+  .pt-pill.yes { background: var(--keep-soft); color: var(--keep); }
+  .pt-pill.no { background: var(--line-soft); color: var(--muted); }
+
+  .score-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .score-table td { padding: 3px 0; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+  .score-table tr:last-child td { border-bottom: none; }
+  .score-table td.sig { color: var(--ink-soft); padding-right: 10px; }
+  .score-table td.pts { font-family: 'IBM Plex Mono', monospace; font-weight: 600; text-align: right; white-space: nowrap; color: var(--accent); }
+
+  .rule-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+  .rule-list li { font-size: 12.5px; color: var(--ink-soft); padding-left: 16px; position: relative; }
+  .rule-list li::before { content: "→"; position: absolute; left: 0; color: var(--muted); font-size: 11px; }
+  .rule-list b { color: var(--ink); font-weight: 600; }
+  .outcome { font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 11px; padding: 1px 6px; border-radius: 4px; }
+  .outcome.terminate, .outcome.waste { background: var(--terminate-soft); color: var(--terminate); }
+  .outcome.review { background: var(--review-soft); color: var(--review); }
+  .outcome.monitor { background: var(--monitor-soft); color: var(--monitor); }
+  .outcome.keep, .outcome.healthy { background: var(--keep-soft); color: var(--keep); }
+
+  .band-note { font-size: 12px; color: var(--ink-soft); background: var(--code-bg); border-radius: 6px; padding: 9px 11px; line-height: 1.5; }
+
+  .tag-box {
+    font-size: 11.5px; background: var(--review-soft); color: var(--review); border-radius: 6px;
+    padding: 8px 11px; line-height: 1.5;
+  }
+  .tag-box b { font-weight: 700; }
+  .tag-box code { background: rgba(0,0,0,0.06); border-radius: 3px; padding: 0 3px; }
+
+  .notes { font-size: 11.5px; color: var(--muted); border-top: 1px solid var(--line-soft); padding-top: 10px; line-height: 1.5; }
+  .notes.warn { color: var(--terminate); }
+
+  .card-foot {
+    padding: 9px 18px; background: var(--surface-2); border-top: 1px solid var(--line);
+    display: flex; justify-content: space-between; align-items: center; font-size: 10.5px; color: var(--muted);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  footer.pagefoot {
+    max-width: 1180px; margin: 40px auto 0; padding: 20px 28px; border-top: 1px solid var(--line);
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted);
+  }
+
+  [hidden] { display: none !important; }
+</style>
+
+<header class="hero">
+  <div class="eyebrow">Codly FinOps — Waste Management</div>
+  <h1>The Waste Rulebook</h1>
+  <p class="dek">Every scoring formula, threshold, and retention-tag exemption behind a TERMINATE / REVIEW / MONITOR / KEEP verdict, traced directly from the provider source for all 30 resource kinds the dashboard scores across AWS and Azure — no summaries, the actual numbers. A handful of dashboard pages bundle more than one resource kind (EC2 running+stopped, EBS snapshots+volumes, the network/extras catch-alls); each kind gets its own card below, with the shared <code>page</code> key on the card footer so you can see which ones share a backend page.</p>
+  <div class="stat-row">
+    <div class="stat"><div class="num tab">30</div><div class="lbl">Resource kinds scored</div></div>
+    <div class="stat"><div class="num tab">15 / 11</div><div class="lbl">AWS / Azure dashboard pages</div></div>
+    <div class="stat"><div class="num tab">18</div><div class="lbl">Distinct page keys</div></div>
+    <div class="stat"><div class="num tab">70·35·15</div><div class="lbl">Default score bands</div></div>
+  </div>
+</header>
+
+<section class="framing">
+  <div class="framing-grid">
+    <div class="fcard">
+      <h3>Three verdict fields, not one</h3>
+      <p>Most pages score 0–100 and bucket the result into an <code>action</code> field. Four pages (EIP, KMS, Secrets, Key Vault) instead write a binary/tri-state <code>classification</code> — no numeric score, just a rule tree. Two more (AMIs, Azure Images) write a <code>decision</code> field via an origin-aware rule tree. Same visual verdict to a user; different code path underneath.</p>
+    </div>
+    <div class="fcard">
+      <h3>The default band ladder</h3>
+      <p>Where a page does score 0–100, this is the convention nearly every one of them follows (exceptions called out per-card):</p>
+      <div class="ladder">
+        <span class="seg keep">KEEP &lt;15</span><span class="arrow">·</span>
+        <span class="seg monitor">MONITOR 15+</span><span class="arrow">·</span>
+        <span class="seg review">REVIEW 35+</span><span class="arrow">·</span>
+        <span class="seg terminate">TERMINATE 70+</span>
+      </div>
+    </div>
+    <div class="fcard">
+      <h3>Policy-targetable ≠ scored</h3>
+      <p>A page can score a resource as waste and still not let a customer write an exclude/require-review policy against it — that needs a separate <code>WASTE_RESOURCE_SCHEMA</code> entry. Several sub-kinds (AWS ENIs/VPC Endpoints/Transit Gateways, Azure NAT Gateways, Log Analytics Workspaces, Resource Groups) score normally but resolve to <code>policy_type=None</code> — flagged per-card below.</p>
+    </div>
+  </div>
+</section>
+
+<div class="controls">
+  <div class="filter-group">
+    <button class="filter-btn active" data-cloud="all" onclick="setCloud('all')">All</button>
+    <button class="filter-btn" data-cloud="aws" onclick="setCloud('aws')">AWS</button>
+    <button class="filter-btn" data-cloud="azure" onclick="setCloud('azure')">Azure</button>
+  </div>
+  <nav class="catnav">
+    <a href="#compute">Compute</a><a href="#storage">Storage</a><a href="#database">Database</a>
+    <a href="#network">Network</a><a href="#images">Images</a><a href="#serverless">Serverless</a>
+    <a href="#security">Security</a><a href="#observability">Observability</a><a href="#governance">Governance</a>
+  </nav>
+  <span class="result-count tab" id="resultCount">30 kinds shown</span>
+</div>
+
+<main id="main"></main>
+
+<footer class="pagefoot">
+  Traced from dashboards/finops/waste/policy_map.py and dashboards/finops/waste/providers/*.py — Codly_Backend, staging branch, 2026-09-02. Numbers are the literal thresholds in code, not rounded.
+</footer>
+
+<script>
+const DATA = [
+{cat:"compute", cloud:"aws", name:"EC2 — Running Instances", page:"ec2", field:"action", pt:true,
+  sub:[{label:"aws_ec2_idle", rows:[
+    ["CPU < 1%","+40"],["CPU < 2%","+35"],["CPU < 5%","+28"],["CPU < 10%","+18"],["CPU < 20%","+8"],
+    ["Memory < 10%","+30"],["Memory < 25%","+20"],["Memory < 50%","+10"],["Memory ≥ 80%","−5"],
+    ["Network < 0.001 GB","+15"],["Network < 0.01 GB","+10"],["Network < 0.1 GB","+5"],
+    ["Disk I/O < 0.001 GB","+10"],["Disk I/O < 0.01 GB","+5"],
+    ["TCP connections = 0","+10"],["TCP connections > 10","−5"],
+  ]}],
+  bandNote:"Environment-aware — not the standard ladder. Dev/Staging/Test/QA: ≥50 TERMINATE, ≥30 MONITOR, else KEEP. Prod: ≥80 TERMINATE, ≥50 REVIEW_RESIZE (or MONITOR if already the smallest instance type), ≥30 MONITOR, else KEEP. CPU&lt;20% AND memory&gt;70% always forces MONITOR regardless of score. A non-prod instance averaging &gt;9h/day gets bumped to REVIEW_SCHEDULE even off a KEEP/MONITOR score, unless tagged environment/env ∈ {prod, production, live}.",
+  notes:"Function: _compute_waste_score() → _classify_running()."},
+
+{cat:"compute", cloud:"aws", name:"EC2 — Stopped Instances", page:"ec2", field:"action", pt:true,
+  tag:"Any one match short-circuits to score 5, KEEP: <code>retention</code>∈{keep,true,yes} · <code>backup</code>∈{true,yes} · \"do not delete\" substring in Name tag · <code>do_not_delete</code> tag present · <code>do not delete</code>∈{true,yes} · <code>stop</code>∈{true,yes}",
+  sub:[{label:"aws_ec2_stopped", rows:[
+    ["Downtime > 90% of instance lifetime","+40"],["Downtime > 80%","+30"],["Downtime > 60%","+15"],
+    ["Stopped ≥ 60 days (configurable)","+30"],["Stopped ≥ 30 days","+15"],["Stopped ≥ 7 days","+5"],
+    ["EBS cost > $10/mo","+15"],["EBS cost > $5/mo","+5"],["No Owner tag","+10"],
+  ]}],
+  bands:[["terminate","≥70"],["monitor","≥15"],["keep","else"]],
+  notes:"Function: _classify_stopped() — single unified engine (this session's merge; the old separate \"suggestion\" analyzer is deleted). No REVIEW tier — deliberate, there's no generic review state for an already-stopped box."},
+
+{cat:"compute", cloud:"azure", name:"VM — Running", page:"ec2", field:"action", pt:true,
+  sub:[{label:"azure_vms_idle", rows:[
+    ["CPU metrics unavailable","+10 (POSSIBLY_IDLE)"],["CPU < 5%","+60 (IDLE)"],
+    ["CPU 5–15%","+30 (UNDERUTILIZED)"],["CPU 15–30%","+15 (MODERATE)"],["No tags","+10"],
+  ]}],
+  bands:[["terminate","≥70"],["review","≥35"],["monitor","≥15"],["keep","else"]],
+  notes:"No retention-tag exemption exists for Azure VMs — genuine AWS/Azure asymmetry. A VM tagged \"keep forever\" still gets scored purely on CPU/deallocation signals.", flagWarn:true},
+
+{cat:"compute", cloud:"azure", name:"VM — Deallocated / Stopped", page:"ec2", field:"action", pt:true,
+  sub:[{label:"azure_vms_stopped", rows:[
+    ["Base — disk cost, zero compute benefit","+50"],["Stopped > 30 days","+20"],["No tags","+10"],
+  ]}],
+  bands:[["terminate","≥70"],["review","≥35"],["monitor","≥15"],["keep","else"]],
+  notes:"No retention-tag exemption, unlike AWS's equivalent stopped-instance page."},
+
+{cat:"storage", cloud:"aws", name:"EBS — Snapshots", page:"ebs", field:"action", pt:true,
+  sub:[{label:"aws_ebs_snapshots — source-type base", rows:[
+    ["DLM-managed","0 base"],["AMI-backup","0 base (+10 if &gt;180d)"],["AMI-copy","5 base (+25 if &gt;60d)"],
+    ["Manual backup","5 → +10 (&gt;90d) → +20 (&gt;180d)"],["Test snapshot","60 base"],["CloudFormation","5 base"],["Unknown source","30 base"],
+  ]},{label:"+ age & governance (all sources)", rows:[
+    ["Age > 365 days","+30"],["Age > 180 days","+15"],["No Owner tag (skipped for DLM)","+10"],
+    ["Unencrypted AND age > 90d","+5"],["Fully orphaned (no desc/tags/unknown source)","+20"],
+  ]}],
+  bands:[["terminate","≥70"],["review","≥35"],["monitor","≥15"],["keep","else"]]},
+
+{cat:"storage", cloud:"aws", name:"EBS — Unattached Volumes", page:"ebs", field:"action", pt:true, flag:"NEW",
+  tag:"Same pattern as EC2 stopped instances — any match short-circuits to score 5, KEEP.",
+  sub:[{label:"aws_ebs_volumes", rows:[
+    ["Base","+20"],["Age > 365 days (since creation, not detachment)","+35"],["Age > 180 days","+20"],
+    ["Age > 90 days","+10"],["Age > 30 days","+5"],["No Owner tag","+10"],
+    ["Zero tags AND age > 180d","+15"],["Unencrypted AND age > 90d","+5"],
+    ["Size ≥ 500 GB","+5"],["io1/io2 type AND age > 30d","+5"],
+  ]}],
+  bands:[["terminate","≥70"],["review","≥35"],["monitor","≥15"],["keep","else"]],
+  notes:"Shipped this session (PR #2027). Age is since creation — describe_volumes has no \"detached at\" timestamp, same simplification the pre-existing agent-chat tool already made."},
+
+{cat:"storage", cloud:"azure", name:"Managed Disk Snapshots", page:"ebs", field:"action", pt:true, flag:"GAP",
+  sub:[{label:"azure_snapshots", rows:[
+    ["Age > 180 days","+40"],["Age > 90 days","+20"],["Age > 30 days","+10"],["No tags","+10"],
+  ]}],
+  bands:[["terminate","≥70"],["review","≥35"],["monitor","≥15"],["keep","else"]],
+  notes:"Azure has no unattached-managed-disk dashboard page at all — azure_disks exists in the policy schema for the agent-chat tool only, never wired into a dashboard PageSpec. Clearest AWS-ahead-of-Azure gap right now, direct counterpart to AWS's unattached-volumes page above.", flagWarn:true},
+
+{cat:"storage", cloud:"aws", name:"S3 Buckets", page:"s3", field:"action", pt:true,
+  sub:[{label:"aws_s3_buckets", rows:[
+    ["No CloudWatch data yet","flat 15 (MONITOR)"],
+    ["Dead bucket (0 size growth AND 0 object delta/30d)","+70"],
+    ["…but real reads seen in request metrics","downgraded to +35"],
+    ["Partial flat (size OR objects only)","+20"],
+    ["Versioning enabled, no lifecycle policy","+30"],
+    ["No lifecycle AND > 1GB","+15"],["No tags","+5"],
+  ]}],
+  bands:[["terminate","≥70"],["review","≥35"],["monitor","≥15"],["keep","else"]]},
+
+{cat:"storage", cloud:"azure", name:"Storage Accounts", page:"s3", field:"action", pt:true,
+  sub:[{label:"azure_storage_accounts", rows:[
+    ["Zero blob containers","+50"],["No transactions in 30d","+60"],["Very low transactions","+20"],
+    ["Age > 90d, no lifecycle policy","+30"],["Hot tier + versioning + no delete rule","+20"],
+    ["No tags","+10"],["Public blob access enabled","+10"],
+  ]}],
+  bands:[["terminate","≥70"],["review","≥35"],["monitor","≥15"],["keep","else"]]},
+
+{cat:"database", cloud:"aws", name:"RDS Snapshots", page:"rds", field:"action", pt:true,
+  sub:[{label:"aws_rds_snapshots", rows:[
+    ["Automated backup, retention > 30d","+30"],["Automated backup, retention 15–30d","+15"],
+    ["Automated backup, retention 8–14d","+5"],["Automated backup, retention ≤ 7d","KEEP"],
+    ["Manual snapshot > 180d","+60"],["Manual snapshot > 90d","+30"],["Manual snapshot > 30d","+10"],
+    ["No tags (either kind)","+10"],
+  ]}],
+  bands:[["terminate","≥70"],["review","≥35"],["monitor","≥15"],["keep","else"]]},
+
+{cat:"database", cloud:"azure", name:"Azure SQL Backups", page:"rds", field:"action", pt:true,
+  sub:[{label:"azure_sql", rows:[
+    ["Backup retention > 30d","+30"],["Retention 15–30d","+15"],["Retention 8–14d","+5"],["Retention ≤ 7d","KEEP"],
+    ["LTR weekly > 12 weeks","+20"],["LTR monthly > 6 months","+20"],["LTR yearly > 2 years","+20"],["No tags","+10"],
+  ]}],
+  bands:[["terminate","≥70"],["review","≥35"],["monitor","≥15"],["keep","else"]]},
+
+{cat:"network", cloud:"aws", name:"Load Balancers", page:"lb", field:"action", pt:true,
+  sub:[{label:"aws_load_balancers", rows:[
+    ["No target groups","+40"],["Target groups exist, 0 healthy targets","+50"],
+    ["0 requests in 7d with healthy targets","+30"],["No tags","+10"],
+  ]}],
+  bands:[["terminate","≥70"],["review","≥35"],["monitor","≥15"],["keep","else"]],
+  notes:"Fixed cost baseline ≈$16.43/mo + LCU usage."},
+
+{cat:"network", cloud:"aws", name:"Network — VPCs, Security Groups & more", page:"network", field:"action", pt:"mixed",
+  sub:[
+    {label:"Security Groups — aws_security_groups", pt:true, rows:[["No ENI usage (unused SG)","+30"],["No tags","+10"]]},
+    {label:"VPC Endpoints — not policy-targetable", pt:false, rows:[["No route/subnet association","+40"],["No tags","+10"]]},
+    {label:"ENIs — not policy-targetable", pt:false, rows:[["Unattached","+60"],["No tags","+10"]]},
+    {label:"Transit Gateways — not policy-targetable", pt:false, rows:[["No attachments","+50"],["0 bytes transferred/7d","+40"],["No tags","+10"]]},
+  ],
+  bands:[["terminate","≥70"],["review","≥35"],["monitor","≥15"],["keep","else"]],
+  notes:"One page, one file (aws_network_provider.py), five discriminated resource kinds sharing a single \"resources\" list. policy_map.py also declares a bare-VPC schema mapping (resource_type=\"vpc\" → aws_vpcs) — confirmed policy-targetable, but this pass didn't isolate a VPC-only score distinct from VPC Endpoints above; don't quote a VPC-specific number without re-checking the file directly."},
+
+{cat:"network", cloud:"aws", name:"Elastic IPs", page:"eip", field:"classification", pt:true,
+  rule:[
+    ["Unattached, or attached to a stopped instance","classification: WASTE"],
+    ["Attached to a running instance","classification: HEALTHY"],
+  ],
+  notes:"No numeric score at all — binary rule, no REVIEW tier."},
+
+{cat:"network", cloud:"aws", name:"NAT Gateways", page:"nat_gateway", field:"action", pt:true,
+  sub:[{label:"aws_nat_gateways", rows:[
+    ["Both directions near-zero (<1MB/day avg, 30d)","+60"],["One direction near-zero","+30"],["No tags","+10"],
+  ]}],
+  bands:[["terminate","≥70"],["review","≥35"],["monitor","≥15"],["keep","else"]]},
+
+{cat:"network", cloud:"azure", name:"Application Gateway / Load Balancer", page:"lb", field:"action", pt:true,
+  sub:[{label:"azure_load_balancers", rows:[
+    ["No backend pools","+40"],["Pools exist, all empty","+50"],
+    ["WAF_v2 tier with no WAF policy attached","+30"],["No tags","+10"],
+  ]}],
+  bands:[["terminate","≥70"],["review","≥35"],["monitor","≥15"],["keep","else"]]},
+
+{cat:"network", cloud:"azure", name:"Network — NSGs, NICs & more", page:"network", field:"action", pt:"mixed",
+  sub:[
+    {label:"NSGs — azure_nsgs", pt:true, rows:[["0 NICs AND 0 subnets","+60"],["No tags","+10"]]},
+    {label:"NICs — not policy-targetable", pt:false, rows:[["Unattached","+60"],["No tags","+10"]]},
+    {label:"Private Endpoints — not policy-targetable", pt:false, rows:[["No connections","+70"],["Non-approved connections only","+50"],["No tags","+10"]]},
+    {label:"VPN Gateways — not policy-targetable", pt:false, rows:[["No connections","+60"],["No tags","+10"]]},
+  ],
+  bands:[["terminate","≥70"],["review","≥35"],["monitor","≥15"],["keep","else"]],
+  notes:"azure_network_provider.py maps these explicitly onto the AWS concepts above (NSG↔SG, Private Endpoint↔VPC Endpoint, etc.). policy_map.py also declares a bare-VNet schema mapping (azure_vnets), confirmed policy-targetable — same caveat as AWS's VPC row: no VNet-only score isolated this pass."},
+
+{cat:"network", cloud:"azure", name:"Public IPs", page:"eip", field:"action", pt:true,
+  sub:[{label:"azure_public_ips", rows:[["Unattached (no ipConfiguration)","60 base"],["No tags","+10"]]}],
+  bands:[["terminate","≥70"],["review","≥35"],["monitor","≥15"],["keep","else"]],
+  notes:"Thin adapter — delegates straight to azure_extras_provider.py::_scan_public_ips()."},
+
+{cat:"images", cloud:"aws", name:"AMIs", page:"ami", field:"decision", pt:true,
+  rule:[
+    ["DLM-managed, past expirationTime","decision: WASTE"],
+    ["DLM-managed, expiring ≤ 30 days","decision: REVIEW"],
+    ["DLM-managed, otherwise","decision: KEEP"],
+    ["AWS Backup, age > 180 days","decision: REVIEW"],
+    ["Copied AMI, age > 90 days","decision: WASTE"],
+    ["Copied AMI, otherwise","decision: REVIEW"],
+    ["Manual, age > 90 days","decision: WASTE"],
+    ["Manual, otherwise","decision: REVIEW"],
+    ["Unknown origin","decision: REVIEW (always)"],
+    ["Referenced by a live launch template / ASG / running instance","forced down to REVIEW regardless of age"],
+  ],
+  notes:"Thresholds are Django-settings-configurable (defaults shown). The last rule is a genuine safety net — an AMI actually in use never auto-flags as WASTE."},
+
+{cat:"images", cloud:"azure", name:"Images", page:"ami", field:"decision", pt:true,
+  sub:[{label:"azure_images — source-type base", rows:[
+    ["Gallery-managed","0 base"],["Platform image","0 base"],["Custom/manual","10 base"],
+    ["Backup","0 base (+20 if &gt;180d)"],["Unknown source","30 base"],
+  ]},{label:"+ age", rows:[["Age > 365 days","+30"],["Age > 180 days","+15"],["No tags","+10"]]}],
+  bands:[["terminate","decision: WASTE ≥70"],["review","decision: REVIEW ≥35"],["monitor","≥15"],["keep","decision: KEEP"]],
+  notes:"Same decision field as AWS AMIs, additive-score path rather than a pure rule tree."},
+
+{cat:"serverless", cloud:"aws", name:"Lambda Functions", page:"lambda", field:"action", pt:true,
+  sub:[{label:"aws_lambda_functions", rows:[
+    ["0 invocations in 30d","+60"],["Provisioned concurrency + 0 invocations","+30 (double-billed)"],["No tags","+10"],
+  ]}],
+  bands:[["terminate","≥70"],["review","≥35"],["monitor","≥15"],["keep","else"]]},
+
+{cat:"serverless", cloud:"aws", name:"ECR Images", page:"ecr", field:"action", pt:true,
+  sub:[{label:"aws_ecr_images", rows:[
+    ["Untagged / dangling image","+50"],["Pushed > 180 days ago","+40"],["Pushed > 90 days ago","+20"],["No repo tags","+10"],
+  ]}],
+  bands:[["terminate","≥70"],["review","≥35"],["monitor","≥15"],["keep","else"]],
+  notes:"ECR has no native last-pull timestamp — push date is used as the age proxy."},
+
+{cat:"serverless", cloud:"aws", name:"EFS File Systems", page:"efs", field:"action", pt:true,
+  sub:[{label:"aws_efs_file_systems", rows:[
+    ["Near-zero I/O over 30d (<1MB/day avg)","+60"],["I/O 1–10MB/day","+20"],["No tags","+10"],
+  ]}],
+  bands:[["terminate","≥70"],["review","≥35"],["monitor","≥15"],["keep","else"]]},
+
+{cat:"security", cloud:"aws", name:"KMS Keys", page:"kms", field:"classification", pt:true,
+  rule:[
+    ["PendingDeletion, no active grants","classification: WASTE"],
+    ["PendingDeletion, active grants exist","downgraded to REVIEW"],
+    ["Disabled, no grants","classification: WASTE"],
+    ["Disabled, grants exist","classification: REVIEW"],
+    ["Enabled, unused > 90 days","classification: REVIEW"],
+    ["Enabled, no alias/description, age > 365 days","classification: REVIEW"],
+    ["Otherwise","classification: HEALTHY"],
+  ],
+  notes:"State-machine, not an additive score."},
+
+{cat:"security", cloud:"aws", name:"Secrets Manager", page:"secrets", field:"classification", pt:true,
+  rule:[
+    ["Scheduled for deletion","classification: WASTE"],
+    ["No access in > 90 days","classification: WASTE"],
+    ["Never accessed, age > 90d, no description/tags","classification: REVIEW"],
+    ["No access record, age > 180 days","classification: REVIEW"],
+    ["Otherwise","classification: HEALTHY"],
+  ]},
+
+{cat:"security", cloud:"azure", name:"Key Vaults", page:"keyvault", field:"classification", pt:true,
+  rule:[
+    ["Empty vault (0 secrets)","classification: WASTE"],
+    ["All secrets disabled or expired","classification: WASTE"],
+    ["Any active secret unused > 90 days","classification: REVIEW"],
+    ["Otherwise","classification: HEALTHY"],
+  ]},
+
+{cat:"observability", cloud:"aws", name:"CloudWatch Log Groups", page:"cloudwatch_logs", field:"action", pt:true,
+  sub:[{label:"aws_cloudwatch_log_groups", rows:[
+    ["No retention policy set","+50"],["Size > 10GB, no retention","+20"],["Size > 1GB, no retention","+15"],["No tags","+10"],
+  ]}],
+  bands:[["terminate","≥70"],["review","≥35"],["monitor","≥15"],["keep","else"]]},
+
+{cat:"observability", cloud:"azure", name:"Log Analytics Workspaces", page:"azure_extras", field:"action", pt:false,
+  sub:[{label:"via azure_extras_provider.py", rows:[
+    ["No retention policy set","+50"],["Retention > 365 days","+30"],["Retention > 90 days","+15"],["No tags","+10"],
+  ]}],
+  bands:[["terminate","≥70"],["review","≥35"],["monitor","≥15"],["keep","else"]],
+  notes:"Delivered through the azure_extras catch-all page. No policy_type schema entry anywhere in the codebase — can't be customer-targeted at all, not even in theory.", flagWarn:true},
+
+{cat:"network", cloud:"azure", name:"NAT Gateways", page:"azure_extras", field:"action", pt:false,
+  sub:[{label:"via azure_extras_provider.py", rows:[
+    ["No subnets","+50"],["< 1MB processed in 30d","+40"],["No tags","+10"],
+  ]}],
+  bands:[["terminate","≥70"],["review","≥35"],["monitor","≥15"],["keep","else"]],
+  notes:"Also delivered through azure_extras. The page additionally re-lists Load Balancers/Public IPs/Storage Accounts here as duplicate discriminated views of the dedicated pages above — same scoring, not a second formula."},
+
+{cat:"governance", cloud:"azure", name:"Resource Groups", page:"rg", field:"action", pt:false,
+  sub:[{label:"azure_rg_provider.py", rows:[
+    ["Empty group (zero resources)","+70"],["Only stopped/deallocated VMs inside","+50"],
+    ["Name matches test/temp/dev/poc/demo AND age > 90d","+30"],
+    ["Zero running VMs AND age > 180d","+20"],["No tags on group","+10"],["All VMs deallocated","+10"],
+  ]}],
+  bands:[["terminate","≥70"],["review","≥35"],["monitor","≥15"],["keep","else"]],
+  notes:"Group-level verdict, not resource-level — acting on it deletes the whole group. No policy_type schema entry yet, so it can't be customer-targeted despite scoring normally."},
+];
+
+const CATS = [
+  {id:"compute", label:"Compute"}, {id:"storage", label:"Storage"}, {id:"database", label:"Database"},
+  {id:"network", label:"Network"}, {id:"images", label:"Images"}, {id:"serverless", label:"Serverless & Containers"},
+  {id:"security", label:"Security & Secrets"}, {id:"observability", label:"Observability"}, {id:"governance", label:"Governance"},
+];
+
+function bandLadder(bands){
+  return '<div class="ladder">' + bands.map(function(b,i){
+    var seg = '<span class="seg '+b[0]+'">'+b[0].toUpperCase()+' '+b[1]+'</span>';
+    return i < bands.length-1 ? seg + '<span class="arrow">·</span>' : seg;
+  }).join('') + '</div>';
+}
+
+function renderCard(d){
+  var flagHtml = d.flag ? '<span class="badge-flag'+(d.flag==="GAP"?" gap":"")+'">'+d.flag+'</span>' : '';
+  var tagHtml = d.tag ? '<div class="tag-box"><b>Retention exemption —</b> '+d.tag+'</div>' : '';
+
+  var bodyHtml = '';
+  if (d.rule) {
+    bodyHtml += '<ul class="rule-list">' + d.rule.map(function(r){
+      var outcomeText = r[1];
+      var cls = /WASTE/.test(outcomeText) ? "waste" : /TERMINATE/.test(outcomeText) ? "terminate" :
+                /REVIEW/.test(outcomeText) ? "review" : /HEALTHY/.test(outcomeText) ? "healthy" :
+                /KEEP/.test(outcomeText) ? "keep" : "monitor";
+      return '<li><b>'+r[0]+'</b> — <span class="outcome '+cls+'">'+outcomeText+'</span></li>';
+    }).join('') + '</ul>';
+  }
+  if (d.sub) {
+    bodyHtml += d.sub.map(function(s){
+      var ptPill = "pt" in s ? '<span class="pt-pill '+(s.pt?"yes":"no")+'">'+(s.pt?"policy-targetable":"not targetable")+'</span>' : '';
+      return '<div class="subkind"><div class="subkind-label">'+s.label+ptPill+'</div>'+
+        '<table class="score-table">' + s.rows.map(function(r){
+          return '<tr><td class="sig">'+r[0]+'</td><td class="pts mono">'+r[1]+'</td></tr>';
+        }).join('') + '</table></div>';
+    }).join('');
+  }
+  if (d.bandNote) {
+    bodyHtml += '<div class="band-note">'+d.bandNote+'</div>';
+  } else if (d.bands) {
+    bodyHtml += bandLadder(d.bands);
+  }
+
+  var notesHtml = d.notes ? '<div class="notes'+(d.flagWarn?" warn":"")+'">'+d.notes+'</div>' : '';
+
+  var ptOverall = d.pt === true ? '<span class="pt-pill yes">policy-targetable</span>' :
+                  d.pt === false ? '<span class="pt-pill no">not policy-targetable</span>' : '';
+
+  return '<div class="card" data-cloud="'+d.cloud+'" data-cat="'+d.cat+'">'+
+    '<div class="card-head">'+
+      '<span class="cloud-badge '+d.cloud+'">'+d.cloud.toUpperCase()+'</span>'+
+      '<h3>'+d.name+'</h3>'+ flagHtml +
+    '</div>'+
+    '<div class="card-body">'+ tagHtml + bodyHtml + notesHtml +'</div>'+
+    '<div class="card-foot"><span>page: '+d.page+'</span><span class="field-badge">'+d.field+'</span>'+(ptOverall||'')+'</div>'+
+  '</div>';
+}
+
+function render(){
+  var main = document.getElementById('main');
+  main.innerHTML = CATS.map(function(c){
+    var items = DATA.filter(function(d){ return d.cat === c.id; });
+    if (!items.length) return '';
+    return '<section class="category" id="'+c.id+'">'+
+      '<h2>'+c.label+'<span class="cat-count tab">'+items.length+'</span></h2>'+
+      '<div class="card-grid">'+ items.map(renderCard).join('') +'</div>'+
+    '</section>';
+  }).join('');
+  applyFilter();
+}
+
+var currentCloud = 'all';
+function setCloud(cloud){
+  currentCloud = cloud;
+  document.querySelectorAll('.filter-btn').forEach(function(b){
+    b.classList.toggle('active', b.dataset.cloud === cloud);
+  });
+  applyFilter();
+}
+function applyFilter(){
+  var shown = 0;
+  document.querySelectorAll('.card').forEach(function(card){
+    var match = currentCloud === 'all' || card.dataset.cloud === currentCloud;
+    card.hidden = !match;
+    if (match) shown++;
+  });
+  document.querySelectorAll('.category').forEach(function(sec){
+    var visibleCards = sec.querySelectorAll('.card:not([hidden])').length;
+    sec.hidden = visibleCards === 0;
+  });
+  document.getElementById('resultCount').textContent = shown + ' kind' + (shown===1?'':'s') + ' shown';
+}
+
+render();
+</script>

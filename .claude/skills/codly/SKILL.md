@@ -28,3 +28,4 @@ All skills live in `.claude/skills/codly/`. Use the `Skill` tool to load them.
 | `backend-storage` | `StorageConfig` S3/Azure Blob upload/download |
 | `backend-agent-hub` | User-defined agents, MCP agents, marketplace |
 | `backend-pr-review` | PR review checklist, common anti-patterns, rejection criteria |
+| `server-access` | SSM into staging/beta/prod EC2, container ports, app login — READ ONLY, no writes without approval |
