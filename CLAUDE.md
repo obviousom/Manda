@@ -88,6 +88,7 @@ Load with `Skill` tool. **Load the relevant skill before writing any code.**
 |File upload/download S3/Blob|`backend-storage`|
 |`agent\_hub/` — user-defined / MCP agents|`backend-agent-hub`|
 |PR review / code audit|`backend-pr-review`|
+|Creating a branch / opening a PR / any plan-report-tracker deliverable|`codly-workflow`|
 
 Skills live in `.claude/skills/`.
 
@@ -118,6 +119,16 @@ Read `graphify-out/GRAPH\_REPORT.md` only for broad architecture review.
 
 \---
 
+## Feature Context — Check At Session Start
+
+`/mnt/c/Users/lenovo/Desktop/documentation and logging/expectation/` holds living per-feature MD files (Claude-maintained todo/flow docs, e.g. `feature - budget management.MD`). This folder lives on the Windows Desktop (moved out of the repo 2026-09-22 so the user can view it directly in Explorer), not under `Manda/`. Note: `/home/lenovo/Desktop` is WSL-only and invisible from Windows — always use the `/mnt/c/...` path.
+
+* **At the start of any new chat, before starting work on a feature**, check that folder for a file matching the feature/area being discussed. If one exists, read it and tell me what's in it (context, open questions, TODOs) before proceeding.
+* **During the conversation**, if I describe something I want done later / next / in future for that feature, go add it to that feature's MD file (Open Questions / TODO section) — don't just hold it in chat context.
+* If no matching file exists yet for a feature worth tracking this way, ask before creating one.
+
+\---
+
 ## Hard Rules (CI will fail on violations)
 
 1. **No direct LLM imports** — never `from langchain\_openai import ...`, `import openai`, or `from llm.langchain.llm\_helper import LangChainModelFactory` in feature code
@@ -135,6 +146,9 @@ Read `graphify-out/GRAPH\_REPORT.md` only for broad architecture review.
 
 ## Pull Requests
 
+* **Load `codly-workflow` skill before creating any branch or PR** — branch naming convention, PR template + screenshot evidence rules, issue creation.
+* **No PR is accepted without screenshot evidence of the fix/improvement** (TL directive, 2026-09-03). Backend: raise PR from template, then edit description to add SS + reasoning. Frontend: before/after SS mandatory, no merge without it.
+* Branch naming: `<feat|fix|hot-fix>/<feature>-<subfeature>-<topic>/<source-branch>/<date>/<issue-number>`. Create the GitHub issue (+ sub-issues if multiple pieces) first if one doesn't exist.
 * Never add Claude/Anthropic as co-author — no `Co-Authored-By: Claude` line, no attribution to Claude in commits or PRs
 * PR description must be 100-200 words — concise summary + test plan, no filler
 * Before pushing `Codly\_Backend/` changes, run the PyArmor obfuscation check locally (mirrors `.github/workflows/pr-pyarmor-check.yml`):
