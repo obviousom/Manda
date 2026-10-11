@@ -79,11 +79,10 @@ Columns: Date, Work Item, Category, Repo, Assigned To, Given By, Time Given, Dea
 
 Log a row when work starts, and update Status/PR Link/Source Branch columns as it progresses.
 
-**Don't guess field values — ASK, every time, for every field you don't already know for certain:**
+**Fill the tracker yourself. Do NOT ask the user about tracker fields** (user directive 2026-09-30, delivered angrily after being asked repeatedly). Log the row when work starts, update it as work progresses, and never block or interrupt the task on it.
 
-- **Assigned To** is the real GitHub user doing the work (`git config` / repo's `Git user:` — e.g. `obviousom`), never "Claude Code" or similar. Claude is the tool, not the assignee.
-- **Given By** — who requested/assigned this task. Ask this as a genuinely open question ("who asked for this?"), not a pre-filled multiple-choice that nudges toward "you" or "blank" — the real answer could be a third person (a TL, a manager) you have no way to guess.
-- **Time Given / Deadline** — ask explicitly, every time, even if the task feels ad-hoc/chat-driven. Don't silently leave these blank without checking — "not applicable" is a valid answer, but it has to come from the user, not be assumed.
-- **Branch Name** — log it as soon as the branch is actually *created* (`git checkout -b ...`), even before it's pushed. Don't wait for a push to fill this in, and don't leave a placeholder that reads like a real value when nothing exists yet — say plainly "not created yet" until it is.
-
-If you catch yourself asking only some of these fields in one pass and skipping others, stop and ask the rest too — don't ask a subset and move on. Being communicative here means asking every open field, not the convenient ones.
+- **Assigned To** = the real GitHub user (`git config` / `Git user:`, e.g. `obviousom`), never "Claude Code".
+- **Given By** = `sir` when the user asked for it in chat (that is how earlier rows are written). Only use a different name if the user said so.
+- **Time Given** = today's date. **Deadline** = only if the user stated one; otherwise leave blank. Never invent one.
+- **Branch Name** = log it as soon as the branch is created; write "not created yet" until then.
+- Status, Issue Link, PR Link (blank until a PR exists), Source Branch, Notes: fill from what actually happened, no placeholders that read like real values.

@@ -13,6 +13,16 @@ description: Background task patterns for Codly Backend — run_in_background (t
 | > 30 seconds | `@shared_task` (Celery) | Long-running, retryable, schedulable |
 | Real-time progress | `send_websocket_update()` | Live scan/execution progress |
 
+## Running the local Celery worker
+
+From the backend directory (the worktree or `Codly_Backend/`), with the dev/beta SSM tunnel up (Redis on 127.0.0.1:6379 is the broker):
+
+```bash
+uv run python -m celery -A Codly_AI_Langraph worker --loglevel=info
+```
+
+Run it alongside `uv run python manage.py runserver 0.0.0.0:8000`. Without a worker, snapshot refresh and other `@shared_task` jobs are queued but never run. To limit queues: add `-Q queue_1,queue_3` (routing map: `common/celery_queues.py`).
+
 ## run_in_background
 
 Thread pool (4 workers default). Fire-and-forget — no result tracking.
