@@ -9,3 +9,7 @@
 	path = Codly_Backend
 	url = https://github.com/Codly-AI/Codly_Backend
 	branch = fix/policy-override-threshold-production-ready
+[submodule "Codly-Website"]
+	path = Codly-Website
+	url = https://github.com/Codly-AI/Codly-Website
+	branch = feat/ssir/revamp/website/16-10
