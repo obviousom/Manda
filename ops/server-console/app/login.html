@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>C.O.R.E. — Access</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#02070d;--cyan:#00d4ff;--cyan2:#7df6ff;--red:#ff3b3b;--text:#cfefff;--mut:#5f8aa3;--line:rgba(0,212,255,.25)}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:radial-gradient(ellipse at 50% 30%,#0a2236 0%,#02070d 65%);color:var(--text);
+  font:500 16px/1.4 Rajdhani,system-ui,sans-serif;display:grid;place-items:center;overflow:hidden}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;
+  background:linear-gradient(rgba(0,212,255,.05) 1px,transparent 1px) 0 0/40px 40px,
+             linear-gradient(90deg,rgba(0,212,255,.05) 1px,transparent 1px) 0 0/40px 40px;
+  mask-image:radial-gradient(circle at 50% 40%,#000 0%,transparent 75%)}
+main{width:min(380px,calc(100vw - 32px));text-align:center;position:relative}
+.reactor{width:150px;height:150px;margin:0 auto 18px;filter:drop-shadow(0 0 18px rgba(0,212,255,.7))}
+.spin{transform-origin:50% 50%;animation:spin 14s linear infinite}
+.spin.rev{animation-direction:reverse;animation-duration:9s}
+.core{animation:pulse 2.4s ease-in-out infinite;transform-origin:50% 50%}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{50%{opacity:.65;transform:scale(.93)}}
+h1{font:900 30px Orbitron,sans-serif;letter-spacing:.32em;margin:0 0 4px;color:var(--cyan2);
+  text-shadow:0 0 18px rgba(0,212,255,.6);padding-left:.32em}
+.sub{color:var(--mut);letter-spacing:.2em;text-transform:uppercase;font-size:13px;margin-bottom:28px}
+form{border:1px solid var(--line);background:rgba(4,18,30,.7);padding:22px;border-radius:4px;
+  clip-path:polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px);backdrop-filter:blur(6px)}
+label{display:block;text-align:left;font:600 11px Orbitron,sans-serif;letter-spacing:.2em;color:var(--mut);margin-bottom:8px}
+input{width:100%;padding:12px 14px;background:rgba(0,0,0,.45);border:1px solid var(--line);color:var(--cyan2);
+  font:600 18px Rajdhani,sans-serif;letter-spacing:.15em;outline:none;border-radius:2px}
+input:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(0,212,255,.15)}
+button{margin-top:16px;width:100%;padding:12px;border:1px solid var(--cyan);background:rgba(0,212,255,.12);color:var(--cyan2);
+  font:700 13px Orbitron,sans-serif;letter-spacing:.3em;cursor:pointer;border-radius:2px;transition:.2s}
+button:hover{background:rgba(0,212,255,.25);box-shadow:0 0 22px rgba(0,212,255,.35)}
+.err{min-height:22px;margin-top:12px;color:var(--red);letter-spacing:.05em}
+.foot{margin-top:18px;color:var(--mut);font-size:12px;letter-spacing:.15em}
+</style>
+</head>
+<body>
+<main>
+  <svg class="reactor" viewBox="0 0 200 200" aria-hidden="true">
+    <defs><radialGradient id="g"><stop offset="0" stop-color="#e9fdff"/><stop offset=".35" stop-color="#7df6ff"/><stop offset="1" stop-color="#00d4ff" stop-opacity="0"/></radialGradient></defs>
+    <circle cx="100" cy="100" r="92" fill="none" stroke="#00d4ff" stroke-opacity=".25" stroke-width="2"/>
+    <g class="spin"><circle cx="100" cy="100" r="80" fill="none" stroke="#00d4ff" stroke-width="6" stroke-dasharray="30 12"/></g>
+    <g class="spin rev"><circle cx="100" cy="100" r="62" fill="none" stroke="#7df6ff" stroke-width="2" stroke-dasharray="4 8"/></g>
+    <circle cx="100" cy="100" r="48" fill="none" stroke="#00d4ff" stroke-width="10" stroke-opacity=".5"/>
+    <circle class="core" cx="100" cy="100" r="34" fill="url(#g)"/>
+  </svg>
+  <h1>C.O.R.E.</h1>
+  <div class="sub">Codly Operations &amp; Response Engine</div>
+  <form method="post" action="/login" autocomplete="off">
+    <label for="p">Identity verification</label>
+    <input id="p" name="password" type="password" autocomplete="current-password" placeholder="Passcode" autofocus required>
+    <button type="submit">Authenticate</button>
+    <div class="err">{{ERR}}</div>
+  </form>
+  <div class="foot">Unauthorized access is logged, sir.</div>
+</main>
+</body>
+</html>

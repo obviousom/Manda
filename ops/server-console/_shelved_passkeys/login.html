@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>C.O.R.E. — Access</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon-192.png">
+<meta name="theme-color" content="#02070d">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#02070d;--cyan:#00d4ff;--cyan2:#7df6ff;--red:#ff3b3b;--text:#cfefff;--mut:#5f8aa3;--line:rgba(0,212,255,.25)}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:radial-gradient(ellipse at 50% 30%,#0a2236 0%,#02070d 65%);color:var(--text);
+  font:500 16px/1.4 Rajdhani,system-ui,sans-serif;display:grid;place-items:center;overflow:hidden}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;
+  background:linear-gradient(rgba(0,212,255,.05) 1px,transparent 1px) 0 0/40px 40px,
+             linear-gradient(90deg,rgba(0,212,255,.05) 1px,transparent 1px) 0 0/40px 40px;
+  mask-image:radial-gradient(circle at 50% 40%,#000 0%,transparent 75%)}
+main{width:min(380px,calc(100vw - 32px));text-align:center;position:relative}
+.reactor{width:150px;height:150px;margin:0 auto 18px;filter:drop-shadow(0 0 18px rgba(0,212,255,.7))}
+.spin{transform-origin:50% 50%;animation:spin 14s linear infinite}
+.spin.rev{animation-direction:reverse;animation-duration:9s}
+.core{animation:pulse 2.4s ease-in-out infinite;transform-origin:50% 50%}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{50%{opacity:.65;transform:scale(.93)}}
+h1{font:900 30px Orbitron,sans-serif;letter-spacing:.32em;margin:0 0 4px;color:var(--cyan2);
+  text-shadow:0 0 18px rgba(0,212,255,.6);padding-left:.32em}
+.sub{color:var(--mut);letter-spacing:.2em;text-transform:uppercase;font-size:13px;margin-bottom:28px}
+form{border:1px solid var(--line);background:rgba(4,18,30,.7);padding:22px;border-radius:4px;
+  clip-path:polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px);backdrop-filter:blur(6px)}
+label{display:block;text-align:left;font:600 11px Orbitron,sans-serif;letter-spacing:.2em;color:var(--mut);margin-bottom:8px}
+input{width:100%;padding:12px 14px;background:rgba(0,0,0,.45);border:1px solid var(--line);color:var(--cyan2);
+  font:600 18px Rajdhani,sans-serif;letter-spacing:.15em;outline:none;border-radius:2px}
+input:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(0,212,255,.15)}
+button{margin-top:16px;width:100%;padding:12px;border:1px solid var(--cyan);background:rgba(0,212,255,.12);color:var(--cyan2);
+  font:700 13px Orbitron,sans-serif;letter-spacing:.3em;cursor:pointer;border-radius:2px;transition:.2s}
+button:hover{background:rgba(0,212,255,.25);box-shadow:0 0 22px rgba(0,212,255,.35)}
+.err{min-height:22px;margin-top:12px;color:var(--red);letter-spacing:.05em}
+.foot{margin-top:18px;color:var(--mut);font-size:12px;letter-spacing:.15em}
+.bio{display:flex;align-items:center;justify-content:center;gap:12px;margin:0;padding:16px;font-size:13px}
+.bio svg{width:26px;height:26px;flex:none}
+.alt{margin-top:14px;background:none;border:none;color:var(--mut);font:600 12px Rajdhani,sans-serif;letter-spacing:.12em;text-decoration:underline;cursor:pointer;width:auto;padding:4px}
+.alt:hover{background:none;box-shadow:none;color:var(--cyan2)}
+.card{border:1px solid var(--line);background:rgba(4,18,30,.7);padding:22px;border-radius:4px;
+  clip-path:polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px);backdrop-filter:blur(6px)}
+#pass{display:none;margin-top:14px;border:none;background:none;padding:0;clip-path:none;backdrop-filter:none}
+#pass.show{display:block}
+</style>
+</head>
+<body>
+<main>
+  <svg class="reactor" viewBox="0 0 200 200" aria-hidden="true">
+    <defs><radialGradient id="g"><stop offset="0" stop-color="#e9fdff"/><stop offset=".35" stop-color="#7df6ff"/><stop offset="1" stop-color="#00d4ff" stop-opacity="0"/></radialGradient></defs>
+    <circle cx="100" cy="100" r="92" fill="none" stroke="#00d4ff" stroke-opacity=".25" stroke-width="2"/>
+    <g class="spin"><circle cx="100" cy="100" r="80" fill="none" stroke="#00d4ff" stroke-width="6" stroke-dasharray="30 12"/></g>
+    <g class="spin rev"><circle cx="100" cy="100" r="62" fill="none" stroke="#7df6ff" stroke-width="2" stroke-dasharray="4 8"/></g>
+    <circle cx="100" cy="100" r="48" fill="none" stroke="#00d4ff" stroke-width="10" stroke-opacity=".5"/>
+    <circle class="core" cx="100" cy="100" r="34" fill="url(#g)"/>
+  </svg>
+  <h1>C.O.R.E.</h1>
+  <div class="sub">Codly Operations &amp; Response Engine</div>
+  <div class="card">
+    <label>Identity verification</label>
+    <button class="bio" id="bioBtn" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+        <path d="M12 11c0 3.5-.8 6.3-2.2 8.6M8.5 4.8A7 7 0 0 1 19 11c0 1.6-.2 3.2-.5 4.6M5 8.3A7 7 0 0 0 5 11c0 2-.4 3.6-1 5"/>
+        <path d="M12 7.5A3.5 3.5 0 0 1 15.5 11c0 2.9-.6 5.5-1.6 7.7M8.5 11a3.5 3.5 0 0 1 .4-1.6M8.6 13.8c-.2 1.6-.7 3.1-1.4 4.4"/>
+      </svg>
+      Unlock with fingerprint / face
+    </button>
+    <div class="err" id="err">{{ERR}}</div>
+    <button class="alt" id="passToggle" type="button">Use passcode instead</button>
+    <form id="pass" method="post" action="/login" autocomplete="off">
+      <input id="p" name="password" type="password" autocomplete="current-password" placeholder="Passcode" required>
+      <button type="submit">Authenticate</button>
+    </form>
+  </div>
+  <div class="foot">Unauthorized access is logged, sir.</div>
+</main>
+<script>
+"use strict";
+const PASSCODE = "{{PASSCODE}}" === "1";
+const err = document.getElementById("err"), pass = document.getElementById("pass"), toggle = document.getElementById("passToggle");
+const b64u = { dec: s => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((s.length + 3) % 4)), c => c.charCodeAt(0)),
+               enc: b => btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "") };
+if (!PASSCODE) toggle.style.display = "none";
+toggle.onclick = () => { pass.classList.add("show"); toggle.style.display = "none"; document.getElementById("p").focus(); };
+if (err.textContent.trim() && PASSCODE) toggle.click();
+async function unlock() {
+  if (!window.PublicKeyCredential) { err.textContent = "This browser has no passkey support. Use the passcode, sir."; return; }
+  err.textContent = "";
+  try {
+    const opts = await (await fetch("/passkey/login/options", {method: "POST"})).json();
+    const cred = await navigator.credentials.get({publicKey: {
+      challenge: b64u.dec(opts.challenge), rpId: opts.rpId, timeout: opts.timeout,
+      userVerification: opts.userVerification, allowCredentials: []}});
+    const r = cred.response;
+    const body = {id: cred.id, rawId: b64u.enc(cred.rawId), type: cred.type, clientExtensionResults: {},
+      authenticatorAttachment: cred.authenticatorAttachment,
+      response: {clientDataJSON: b64u.enc(r.clientDataJSON), authenticatorData: b64u.enc(r.authenticatorData),
+                 signature: b64u.enc(r.signature), userHandle: r.userHandle ? b64u.enc(r.userHandle) : null}};
+    const res = await fetch("/passkey/login/verify", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)});
+    const data = await res.json();
+    if (!res.ok) { err.textContent = data.error || "Access denied."; return; }
+    location.replace("/");
+  } catch (e) {
+    err.textContent = e.name === "NotAllowedError" ? "Cancelled — or no passkey for this device yet. First time? Use the passcode, then register this device."
+                                                   : "Unlock failed: " + e.message;
+  }
+}
+document.getElementById("bioBtn").onclick = unlock;
+</script>
+</body>
+</html>

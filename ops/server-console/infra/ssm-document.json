@@ -1,0 +1,49 @@
+{
+  "schemaVersion": "2.2",
+  "description": "Codly server console: read-only stats, container list and log tails. Parameters are pattern-locked so no arbitrary command can be injected.",
+  "parameters": {
+    "action": {"type": "String", "allowedValues": ["stats", "containers", "docker_logs", "file_log"]},
+    "target": {"type": "String", "default": "-", "allowedPattern": "^[A-Za-z0-9_.-]{1,100}$"},
+    "lines": {"type": "String", "default": "200", "allowedPattern": "^[1-9][0-9]{0,2}$"},
+    "filter": {"type": "String", "default": "all", "allowedValues": ["all", "errors"]}
+  },
+  "mainSteps": [
+    {
+      "action": "aws:runShellScript",
+      "name": "console",
+      "inputs": {
+        "timeoutSeconds": "25",
+        "runCommand": [
+          "A='{{ action }}'; T='{{ target }}'; N='{{ lines }}'; F='{{ filter }}'",
+          "trim() { cut -c1-600 | tail -c 22000; }",
+          "flt() { if [ \"$F\" = errors ]; then grep -i -E 'error|exception|traceback|critical|fatal' | tail -n \"$N\"; else cat; fi; }",
+          "if [ \"$F\" = errors ]; then SCAN=$((N * 20)); else SCAN=$N; fi",
+          "case \"$A\" in",
+          "  stats)",
+          "    echo '@@load'; cat /proc/loadavg",
+          "    echo '@@cpus'; nproc",
+          "    echo '@@boot'; uptime -s",
+          "    echo '@@mem'; free -b | awk 'NR==2 {print $2, $3, $7}'",
+          "    echo '@@disk'; df -B1 / | awk 'NR==2 {print $2, $3, $4}'",
+          "    echo '@@os'; . /etc/os-release && echo \"$PRETTY_NAME\"",
+          "    echo '@@docker'; command -v docker >/dev/null && docker stats --no-stream --format json 2>/dev/null | head -60",
+          "    ;;",
+          "  containers)",
+          "    command -v docker >/dev/null && docker ps -a --format json 2>/dev/null | head -80",
+          "    ;;",
+          "  docker_logs)",
+          "    docker inspect \"$T\" >/dev/null 2>&1 || { echo \"No container named $T on this host.\"; exit 3; }",
+          "    docker logs --timestamps --tail \"$SCAN\" \"$T\" 2>&1 | flt | trim",
+          "    ;;",
+          "  file_log)",
+          "    case \"$T\" in *.log) ;; *) echo 'Only .log files are allowed.'; exit 3;; esac",
+          "    P=\"/home/om/logs/$T\"",
+          "    [ -f \"$P\" ] || { echo \"No log file $P on this host.\"; exit 3; }",
+          "    tail -n \"$SCAN\" \"$P\" | flt | trim",
+          "    ;;",
+          "esac"
+        ]
+      }
+    }
+  ]
+}

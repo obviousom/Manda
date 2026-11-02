@@ -1,2 +1,9 @@
 graphify-out/
 codly_staging.sql
+.env
+_junk/
+.worktrees/
+CLAUDE.local.md
+*:Zone.Identifier
+*.log
+documentation-and-logging/daily-tracker/pending/

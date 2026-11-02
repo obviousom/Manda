@@ -1,0 +1,47 @@
+plugins {
+    id "com.android.application"
+}
+
+// Signing secrets stay outside version control (android/keystore/ is gitignored).
+def keystoreProps = new Properties()
+def keystoreFile = rootProject.file("keystore/keystore.properties")
+if (keystoreFile.exists()) keystoreFile.withInputStream { keystoreProps.load(it) }
+
+android {
+    namespace "ai.codly.core"
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "ai.codly.core"
+        minSdk 28
+        targetSdk 34
+        versionCode 2
+        versionName "2.0"
+    }
+
+    signingConfigs {
+        release {
+            storeFile file(keystoreProps["storeFile"] ?: "missing.jks")
+            storePassword keystoreProps["storePassword"]
+            keyAlias keystoreProps["keyAlias"]
+            keyPassword keystoreProps["keyPassword"]
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation "androidx.appcompat:appcompat:1.6.1"
+    implementation "androidx.biometric:biometric:1.1.0"
+}
