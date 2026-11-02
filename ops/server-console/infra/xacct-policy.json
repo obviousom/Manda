@@ -1,0 +1,25 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {"Sid": "Describe", "Effect": "Allow",
+     "Action": ["ec2:DescribeInstances", "ec2:DescribeInstanceTypes", "ec2:DescribeVolumes",
+                "cloudwatch:GetMetricData", "cloudwatch:ListMetrics", "ssm:GetCommandInvocation"],
+     "Resource": "*"},
+    {"Sid": "PowerOwnInstances", "Effect": "Allow",
+     "Action": ["ec2:StartInstances", "ec2:StopInstances"],
+     "Resource": ["arn:aws:ec2:ap-south-1:647121335538:instance/i-02f9b57ca888514e0",
+                  "arn:aws:ec2:ap-south-1:647121335538:instance/i-02373884a4ef701ea"]},
+    {"Sid": "ConsoleDocumentOnly", "Effect": "Allow",
+     "Action": "ssm:SendCommand",
+     "Resource": ["arn:aws:ssm:ap-south-1:647121335538:document/Codly-ServerConsole",
+                  "arn:aws:ec2:ap-south-1:647121335538:instance/i-02f9b57ca888514e0",
+                  "arn:aws:ec2:ap-south-1:647121335538:instance/i-02373884a4ef701ea"]},
+    {"Sid": "ConsoleStorage", "Effect": "Allow",
+     "Action": ["s3:GetObject", "s3:PutObject"],
+     "Resource": "arn:aws:s3:::codly-data-dump/server-console/*"},
+    {"Sid": "ConsoleStorageList", "Effect": "Allow",
+     "Action": "s3:ListBucket",
+     "Resource": "arn:aws:s3:::codly-data-dump",
+     "Condition": {"StringLike": {"s3:prefix": "server-console/*"}}}
+  ]
+}

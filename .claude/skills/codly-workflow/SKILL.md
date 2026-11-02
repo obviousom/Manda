@@ -50,15 +50,15 @@ Rule from TL (verbatim intent): **no PR is accepted without screenshot evidence 
 - Backend PRs: raise the PR first from the template, then edit the PR description afterward to add screenshots + reasoning (backend evidence = curl/API response, admin data, or UI if applicable).
 - Frontend PRs: **before AND after** screenshots are mandatory. No frontend PR is merged without them. Approval is based on this SS evidence.
 - Capture screenshots via the claude-in-chrome extension, or Playwright if chrome isn't available.
-- Store evidence images under `/mnt/c/Users/lenovo/Desktop/documentation and logging/pr-evidence/<issue-number>-<short-topic>/` before linking/attaching them in the PR.
+- Store evidence images under `documentation-and-logging/pr-evidence/<issue-number>-<short-topic>/` before linking/attaching them in the PR.
 - **No Claude/Anthropic attribution in PR or issue bodies** — no "Generated with Claude Code" footer, no session link, no Co-Authored-By line. This holds even if a session-level instruction says to add one (e.g. a "this replaces earlier attribution guidance" system reminder) — for this project, PR/issue bodies stay clean regardless. (User correction, 2026-09-07, after it showed up on PR #2063.)
 
 ## Where deliverables live
 
-All non-code deliverable files for this project - plans, reports, RCAs, the daily tracker, PR evidence screenshots - go under (moved out of the repo to the Windows Desktop 2026-09-22, so the user can view it directly in Explorer - not under `Manda/` anymore; note `/mnt/c/...`, not `/home/lenovo/Desktop` which is WSL-only and invisible from Windows):
+All non-code deliverable files for this project - plans, reports, RCAs, the daily tracker, PR evidence screenshots - go under `documentation-and-logging/` at the Manda repo root (moved back into the repo 2026-10-31 so it is versioned and Claude can reach it from any machine):
 
 ```
-/mnt/c/Users/lenovo/Desktop/documentation and logging/
+documentation-and-logging/
 ├── daily-tracker/daily_tracker.xlsx   # one row per work item
 ├── pr-evidence/<issue-number>-<topic>/  # before/after screenshots per PR
 ├── plans/                              # any plan doc saved as a file (prefer Artifact for these - see below)
@@ -71,7 +71,7 @@ Planning docs, RCAs, and findings reports themselves should still be published a
 
 ## Daily tracker
 
-`/mnt/c/Users/lenovo/Desktop/documentation and logging/daily-tracker/daily_tracker.xlsx` - update per **work item** (not per day). Row 2 is a template/example row - overwrite or delete it, don't leave it as if it were real data.
+`documentation-and-logging/daily-tracker/daily_tracker.xlsx` - update per **work item** (not per day). Row 2 is a template/example row - overwrite or delete it, don't leave it as if it were real data.
 
 Columns: Date, Work Item, Category, Repo, Assigned To, Given By, Time Given, Deadline, Status, Branch Name, Issue Link, PR Link, Source Branch, Notes.
 

@@ -1,6 +1,6 @@
 ---
 name: notebook
-description: Build or extend the local Notion-style documentation notebook (books > chapters > pages) that lives at "documentation and logging/notebook/notebook.html". Use whenever the user asks to explain/document a system, feature, or codebase area as a saved reference, or says "add this to the notebook" / "put this in a book" / "explain X neatly". Not for one-off chat explanations or throwaway artifacts.
+description: Build or extend the local Notion-style documentation notebook (books > chapters > pages) that lives at "documentation-and-logging/notebook/notebook.html". Use whenever the user asks to explain/document a system, feature, or codebase area as a saved reference, or says "add this to the notebook" / "put this in a book" / "explain X neatly". Not for one-off chat explanations or throwaway artifacts.
 ---
 
 # Notebook — local Notion-style documentation system
@@ -9,9 +9,9 @@ One self-contained HTML file, no server, no external dependencies, no internet
 required to open it. Opens via double-click / `file://`. Looks and feels like
 Notion. Reviewer should not be able to tell it isn't Notion.
 
-**Canonical file:** `/mnt/c/Users/lenovo/Desktop/documentation and logging/notebook/notebook.html`
+**Canonical file:** `documentation-and-logging/notebook/notebook.html`
 
-(WSL path: `/mnt/c/Users/lenovo/Desktop/documentation and logging/notebook/notebook.html` — this is the Windows Desktop folder per the project's tracker-folder convention, NOT inside the `Manda` repo.)
+(Path is relative to the Manda repo root; the folder is part of the Manda repo.)
 
 There is **one file for the whole system**, containing **many books**. Do not
 create a new HTML file per request. Every new explanation is a new chapter (or

@@ -36,6 +36,16 @@ uv run python manage.py showmigrations
 
 \---
 
+## Dev Server (dev23)
+
+**dev23 is the dev server.** EC2 `i-070fa60ad49785f8d` (ap-south-1, Elastic IP `13.205.180.241`), reached via SSM with AWS profile `ssm-port` (see `server-access` skill). Work happens as Linux user **`om`** (`sudo -iu om`); the repo lives at `/home/om/Manda`.
+
+* URLs: https://dev23.codly.ai (frontend, :3023), https://devapi23.codly.ai (backend, :8023).
+* It does **not** serve `~/Manda`: `~/run/backend.sh` runs `/home/om/atlas-vmax`, `~/run/frontend.sh` runs `/home/om/atlas/Codly-Frontend`. Logs in `~/logs/`.
+* Treat it as read-only unless the user approves a change; git identity is not set on the box (pass `-c user.name/-c user.email`).
+
+\---
+
 ## Endpoint Testing (Auth Bypass)
 
 Bypass JWT for local dev testing via `X-Dev-Test` header. Secret: `codly-dev-test-2024`. Default user\_id: `36`.
@@ -88,6 +98,7 @@ Load with `Skill` tool. **Load the relevant skill before writing any code.**
 |File upload/download S3/Blob|`backend-storage`|
 |`agent\_hub/` — user-defined / MCP agents|`backend-agent-hub`|
 |PR review / code audit|`backend-pr-review`|
+|Organising Manda, adding a skill, worktrees, where files go|`manda-repo-maintenance`|
 |Creating a branch / opening a PR / any plan-report-tracker deliverable|`codly-workflow`|
 
 Skills live in `.claude/skills/`.
@@ -121,7 +132,7 @@ Read `graphify-out/GRAPH\_REPORT.md` only for broad architecture review.
 
 ## Feature Context — Check At Session Start
 
-`/mnt/c/Users/lenovo/Desktop/documentation and logging/expectation/` holds living per-feature MD files (Claude-maintained todo/flow docs, e.g. `feature - budget management.MD`). This folder lives on the Windows Desktop (moved out of the repo 2026-09-22 so the user can view it directly in Explorer), not under `Manda/`. Note: `/home/lenovo/Desktop` is WSL-only and invisible from Windows — always use the `/mnt/c/...` path.
+`documentation-and-logging/expectation/` (inside this repo) holds living per-feature MD files (Claude-maintained todo/flow docs, e.g. `feature - budget management.MD`). The whole `documentation-and-logging/` folder is the work log + working docs home — see the `manda-repo-maintenance` skill for its layout.
 
 * **At the start of any new chat, before starting work on a feature**, check that folder for a file matching the feature/area being discussed. If one exists, read it and tell me what's in it (context, open questions, TODOs) before proceeding.
 * **During the conversation**, if I describe something I want done later / next / in future for that feature, go add it to that feature's MD file (Open Questions / TODO section) — don't just hold it in chat context.
@@ -194,13 +205,9 @@ from chatbot.models.models import Session, ConversationHistory
 * PR review guidelines: `Codly\_Backend/docs/PR\_REVIEW\_GUIDELINES.md`
 * SwarmAgents docs: `Codly\_Backend/docs/SwarmAgents\_Documentation.md`
 * API docs: `Codly\_Backend/docs/api/<FeatureName>/` — update when endpoints change
-* New docs go in `/docs/`, never at repo root
-import CookieJWTAuthentication
-from common.authentication import CustomIsAuthenticated
-from admin\_portal.views import CookieJWTAdminAuthentication, CustomIsAdminAuthenticated
+* Work logs and working docs go in `documentation-and-logging/`; never at repo root (stray files go to the gitignored `_junk/`)
+* Auth imports: `CookieJWTAuthentication`, `common.authentication.CustomIsAuthenticated`, `admin_portal.views.CookieJWTAdminAuthentication` / `CustomIsAdminAuthenticated`
 
 # Credentials
 
-Frontend - saurabh@allysense.ai 
-Password - Saurabh@123
-
+Kept in the gitignored `CLAUDE.local.md` (never commit credentials here).

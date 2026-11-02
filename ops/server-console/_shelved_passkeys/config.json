@@ -1,0 +1,71 @@
+{
+  "region": "ap-south-1",
+  "ssm_document": "Codly-ServerConsole",
+  "storage": {
+    "bucket": "codly-data-dump",
+    "prefix": "server-console",
+    "role_arn": "arn:aws:iam::647121335538:role/codly-server-console-xacct"
+  },
+  "lockout": {"max_failures": 5, "window_seconds": 900},
+  "passkeys": {"rp_id": "console.codly.ai", "rp_name": "Codly C.O.R.E.", "origins": ["https://console.codly.ai"]},
+  "android": {"package": "ai.codly.core", "sha256_cert_fingerprints": ["0D:48:09:64:A0:82:71:B4:45:2C:04:D3:49:44:AB:CE:A7:1F:04:77:B1:CC:C6:3A:65:C2:85:AE:39:DE:66:DE"]},
+  "targets": [
+    {
+      "key": "dev",
+      "label": "Dev",
+      "codename": "UNIT 01",
+      "note": "dev23 / devapi23 — om's tmux backend + frontend",
+      "account": "603366204162",
+      "instance_id": "i-070fa60ad49785f8d",
+      "sources": [
+        {"id": "backend", "label": "Backend :8023", "kind": "file", "ref": "backend.log"},
+        {"id": "frontend", "label": "Frontend :3023", "kind": "file", "ref": "frontend.log"}
+      ]
+    },
+    {
+      "key": "staging",
+      "label": "Staging",
+      "codename": "UNIT 02",
+      "note": "Staging stack + CRM",
+      "account": "647121335538",
+      "instance_id": "i-02f9b57ca888514e0",
+      "role_arn": "arn:aws:iam::647121335538:role/codly-server-console-xacct",
+      "sources": [
+        {"id": "backend", "label": "Backend", "kind": "docker", "ref": "codly_backend_staging"},
+        {"id": "celery-1", "label": "Celery worker 1", "kind": "docker", "ref": "codly_backend_staging-celery-workers-1"},
+        {"id": "celery-2", "label": "Celery worker 2", "kind": "docker", "ref": "codly_backend_staging-celery-workers-2"},
+        {"id": "celery-beat", "label": "Celery beat", "kind": "docker", "ref": "codly_backend_staging-celery-beat"},
+        {"id": "frontend", "label": "Frontend", "kind": "docker", "ref": "codly_frontend_staging"}
+      ]
+    },
+    {
+      "key": "beta-prod",
+      "label": "Beta + Prod",
+      "codename": "UNIT 03",
+      "note": "ONE host — stopping it takes down beta AND prod",
+      "danger": true,
+      "account": "603366204162",
+      "instance_id": "i-0e5d43cddb36a407c",
+      "sources": [
+        {"id": "prod-backend", "label": "Prod backend", "kind": "docker", "ref": "codly_backend_prod"},
+        {"id": "prod-celery-1", "label": "Prod celery 1", "kind": "docker", "ref": "codly_backend_prod-celery-workers-1"},
+        {"id": "prod-celery-2", "label": "Prod celery 2", "kind": "docker", "ref": "codly_backend_prod-celery-workers-2"},
+        {"id": "prod-celery-beat", "label": "Prod beat", "kind": "docker", "ref": "codly_backend_prod-celery-beat"},
+        {"id": "beta-backend", "label": "Beta backend", "kind": "docker", "ref": "codly_backend_beta"},
+        {"id": "beta-celery-1", "label": "Beta celery 1", "kind": "docker", "ref": "codly_backend_beta-celery-workers-1"},
+        {"id": "beta-celery-2", "label": "Beta celery 2", "kind": "docker", "ref": "codly_backend_beta-celery-workers-2"},
+        {"id": "beta-celery-beat", "label": "Beta beat", "kind": "docker", "ref": "codly_backend_beta-celery-beat"}
+      ]
+    },
+    {
+      "key": "cloud-in",
+      "label": "Cloud-in",
+      "codename": "UNIT 04",
+      "note": "cloud-os-prod",
+      "account": "647121335538",
+      "instance_id": "i-02373884a4ef701ea",
+      "role_arn": "arn:aws:iam::647121335538:role/codly-server-console-xacct",
+      "sources": []
+    }
+  ]
+}

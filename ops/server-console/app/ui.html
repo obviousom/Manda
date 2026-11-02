@@ -1,0 +1,656 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>C.O.R.E. — Server Ops</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#02070d;--panel:rgba(5,20,33,.78);--panel2:rgba(8,30,48,.6);--line:rgba(0,212,255,.22);--line2:rgba(0,212,255,.45);
+  --cyan:#00d4ff;--cyan2:#7df6ff;--gold:#ffb627;--red:#ff3b3b;--green:#3dffa8;--text:#cfefff;--mut:#5f8aa3;
+  --hud:Orbitron,sans-serif;--mono:"JetBrains Mono",ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html{scrollbar-color:var(--line2) transparent}
+body{margin:0;min-height:100vh;color:var(--text);font:500 15px/1.45 Rajdhani,system-ui,sans-serif;
+  background:radial-gradient(ellipse at 50% -10%,#0b2a42 0%,#02070d 60%) fixed,var(--bg)}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:linear-gradient(rgba(0,212,255,.045) 1px,transparent 1px) 0 0/44px 44px,
+             linear-gradient(90deg,rgba(0,212,255,.045) 1px,transparent 1px) 0 0/44px 44px;
+  mask-image:linear-gradient(#000,transparent 85%)}
+body:after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;opacity:.35;
+  background:repeating-linear-gradient(transparent 0 2px,rgba(0,0,0,.18) 2px 3px)}
+button{font:inherit;color:inherit}
+.wrap{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:22px 16px 60px}
+
+/* ---------- header */
+header{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+.mini-reactor{width:54px;height:54px;flex:none;filter:drop-shadow(0 0 10px rgba(0,212,255,.7))}
+.spin{transform-origin:50% 50%;animation:spin 12s linear infinite}
+.spin.rev{animation-direction:reverse;animation-duration:7s}
+.core{animation:pulse 2.4s ease-in-out infinite;transform-origin:50% 50%}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{50%{opacity:.6;transform:scale(.92)}}
+.brand h1{margin:0;font:900 24px var(--hud);letter-spacing:.3em;color:var(--cyan2);text-shadow:0 0 16px rgba(0,212,255,.55)}
+.brand div{color:var(--mut);letter-spacing:.22em;font-size:12px;text-transform:uppercase}
+.hdr-right{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.clock{font:600 13px var(--hud);letter-spacing:.15em;color:var(--cyan2);padding:8px 12px;border:1px solid var(--line)}
+.hbtn{background:transparent;border:1px solid var(--line);padding:8px 12px;cursor:pointer;font:600 11px var(--hud);letter-spacing:.18em;color:var(--mut);transition:.2s}
+.hbtn:hover,.hbtn.on{color:var(--cyan2);border-color:var(--cyan);box-shadow:0 0 14px rgba(0,212,255,.25)}
+.greet{border-left:2px solid var(--cyan);padding:6px 14px;margin-bottom:24px;background:linear-gradient(90deg,rgba(0,212,255,.08),transparent)}
+.greet b{font:700 18px Rajdhani;color:var(--cyan2);letter-spacing:.04em}
+.greet span{display:block;color:var(--mut);font-size:14px}
+.typing:after{content:"▌";animation:blink 1s steps(1) infinite;color:var(--cyan)}
+@keyframes blink{50%{opacity:0}}
+
+/* ---------- cards */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.card{position:relative;background:var(--panel);border:1px solid var(--line);padding:18px 18px 16px;cursor:pointer;
+  clip-path:polygon(16px 0,100% 0,100% calc(100% - 16px),calc(100% - 16px) 100%,0 100%,0 16px);
+  transition:transform .25s,border-color .25s,box-shadow .25s;animation:rise .5s both}
+.card:hover{transform:translateY(-3px);border-color:var(--line2);box-shadow:0 10px 40px rgba(0,212,255,.12)}
+.card:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+@keyframes rise{from{opacity:0;transform:translateY(12px)}}
+.card .code{font:700 11px var(--hud);letter-spacing:.3em;color:var(--gold)}
+.card h2{margin:2px 0 2px;font:700 22px var(--hud);letter-spacing:.08em}
+.card .note{color:var(--mut);font-size:14px;min-height:40px}
+.card .row{display:flex;align-items:center;gap:14px;margin-top:10px}
+.card .meta{font-size:13px;color:var(--mut);line-height:1.6}
+.card .meta b{color:var(--text);font-weight:600}
+.gauge{width:92px;height:92px;flex:none}
+.state-txt{font:700 11px var(--hud);letter-spacing:.2em}
+.s-running{--c:var(--green)}.s-stopped{--c:var(--red)}.s-pending,.s-stopping,.s-shutting-down{--c:var(--gold)}.s-error,.s-unknown{--c:var(--mut)}
+.s-running .state-txt,.s-stopped .state-txt,.s-pending .state-txt,.s-stopping .state-txt{color:var(--c)}
+.danger-tag{position:absolute;top:14px;right:16px;font:700 9px var(--hud);letter-spacing:.2em;color:var(--red);border:1px solid rgba(255,59,59,.5);padding:2px 6px}
+.ring-rot{transform-origin:50% 50%;animation:spin 6s linear infinite}
+.s-stopped .ring-rot,.s-error .ring-rot{animation:none;opacity:.35}
+.s-pending .ring-rot,.s-stopping .ring-rot{animation-duration:1.2s}
+.skeleton{height:190px;background:linear-gradient(90deg,var(--panel) 0%,rgba(0,212,255,.08) 50%,var(--panel) 100%) 0 0/200% 100%;animation:shimmer 1.4s infinite;border:1px solid var(--line)}
+@keyframes shimmer{to{background-position:-200% 0}}
+
+/* ---------- detail bay */
+.bay{position:fixed;inset:0;z-index:20;background:rgba(1,6,11,.86);backdrop-filter:blur(6px);display:none;overflow:auto}
+.bay.open{display:block;animation:fade .25s}
+@keyframes fade{from{opacity:0}}
+.bay-inner{max-width:1180px;margin:0 auto;padding:20px 16px 60px}
+.bay-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+.back{background:none;border:1px solid var(--line);padding:8px 12px;cursor:pointer;font:600 11px var(--hud);letter-spacing:.2em;color:var(--mut)}
+.back:hover{color:var(--cyan2);border-color:var(--cyan)}
+.bay-head h2{margin:0;font:900 26px var(--hud);letter-spacing:.1em}
+.bay-head .code{font:700 12px var(--hud);letter-spacing:.3em;color:var(--gold)}
+.chip{font:700 11px var(--hud);letter-spacing:.18em;padding:5px 10px;border:1px solid var(--c,var(--mut));color:var(--c,var(--mut))}
+.iid{font:400 13px var(--mono);color:var(--mut)}
+.layout{display:grid;grid-template-columns:320px 1fr;gap:18px}
+@media (max-width:900px){.layout{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);padding:18px;position:relative}
+.panel h3{margin:0 0 12px;font:700 12px var(--hud);letter-spacing:.25em;color:var(--cyan2)}
+.panel h3:before{content:"";display:inline-block;width:8px;height:8px;background:var(--cyan);margin-right:8px;box-shadow:0 0 8px var(--cyan)}
+.corner:after{content:"";position:absolute;right:-1px;bottom:-1px;width:18px;height:18px;border-right:2px solid var(--cyan);border-bottom:2px solid var(--cyan)}
+.corner:before{content:"";position:absolute;left:-1px;top:-1px;width:18px;height:18px;border-left:2px solid var(--cyan);border-top:2px solid var(--cyan)}
+
+/* ---------- engine button */
+.engine-wrap{display:grid;place-items:center;padding:8px 0 4px}
+.engine{position:relative;width:210px;height:210px;border-radius:50%;border:none;cursor:pointer;padding:0;
+  background:radial-gradient(circle at 50% 30%,#3a4552 0%,#161d25 45%,#06090d 100%);
+  box-shadow:0 0 0 7px #0d1319,0 0 0 9px #2c3a48,0 0 0 13px #0a0f14,inset 0 6px 14px rgba(255,255,255,.08),inset 0 -12px 22px rgba(0,0,0,.7),0 0 46px var(--glow,rgba(0,212,255,.35));
+  transition:transform .12s,box-shadow .3s;user-select:none;-webkit-user-select:none;touch-action:none}
+.engine:active{transform:scale(.97)}
+.engine:disabled{cursor:not-allowed;filter:grayscale(.7) brightness(.7)}
+.engine svg{position:absolute;inset:-12px;width:calc(100% + 24px);height:calc(100% + 24px);pointer-events:none}
+.engine .face{position:absolute;inset:26px;border-radius:50%;display:grid;place-content:center;gap:2px;text-align:center;
+  background:radial-gradient(circle at 50% 25%,#28323d,#0c1117 70%);box-shadow:inset 0 2px 6px rgba(255,255,255,.08),inset 0 -6px 12px rgba(0,0,0,.6)}
+.engine .t1{font:700 12px var(--hud);letter-spacing:.35em;color:#8aa0b2;padding-left:.35em}
+.engine .t2{font:900 28px var(--hud);letter-spacing:.12em;color:var(--fg,#e6f9ff);text-shadow:0 0 14px var(--glow2,rgba(0,212,255,.9))}
+.engine .t3{font:700 12px var(--hud);letter-spacing:.35em;color:#8aa0b2;padding-left:.35em}
+.engine .led{width:34px;height:4px;margin:6px auto 0;border-radius:2px;background:var(--fg,#00d4ff);box-shadow:0 0 10px var(--fg,#00d4ff)}
+.engine.go{--glow:rgba(0,212,255,.45);--glow2:rgba(0,212,255,.9);--fg:#7df6ff}
+.engine.kill{--glow:rgba(255,59,59,.45);--glow2:rgba(255,59,59,.9);--fg:#ff6b6b}
+.engine.wait{--glow:rgba(255,182,39,.4);--glow2:rgba(255,182,39,.9);--fg:#ffd27a}
+.engine.idle-pulse{animation:breathe 2.8s ease-in-out infinite}
+@keyframes breathe{50%{box-shadow:0 0 0 7px #0d1319,0 0 0 9px #2c3a48,0 0 0 13px #0a0f14,inset 0 6px 14px rgba(255,255,255,.08),inset 0 -12px 22px rgba(0,0,0,.7),0 0 70px var(--glow)}}
+.hold-hint{margin-top:16px;font:600 11px var(--hud);letter-spacing:.22em;color:var(--mut);text-align:center}
+.danger-note{margin-top:12px;border:1px solid rgba(255,59,59,.45);color:#ff9d9d;padding:8px 10px;font-size:13px;background:rgba(255,59,59,.07)}
+
+/* ---------- spec list */
+.specs{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:14px;margin-top:4px}
+.specs dt{color:var(--mut);font:600 10px var(--hud);letter-spacing:.18em;padding-top:4px}
+.specs dd{margin:0;word-break:break-all;font-weight:600}
+.mono{font-family:var(--mono);font-size:13px}
+
+/* ---------- tabs */
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:16px;overflow-x:auto}
+.tab{background:none;border:none;padding:10px 14px;cursor:pointer;font:700 11px var(--hud);letter-spacing:.22em;color:var(--mut);border-bottom:2px solid transparent;white-space:nowrap}
+.tab.on{color:var(--cyan2);border-bottom-color:var(--cyan);text-shadow:0 0 10px rgba(0,212,255,.6)}
+.pane{display:none}.pane.on{display:block;animation:fade .2s}
+
+/* ---------- charts */
+.charts{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.chart{background:var(--panel2);border:1px solid var(--line);padding:12px}
+.chart .lbl{font:600 10px var(--hud);letter-spacing:.2em;color:var(--mut)}
+.chart .val{font:700 24px var(--hud);color:var(--cyan2);margin:2px 0 6px}
+.chart svg{width:100%;height:70px;display:block}
+.chart .rng{display:flex;justify-content:space-between;font-size:11px;color:var(--mut)}
+
+/* ---------- diagnostics */
+.dials{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.dial{background:var(--panel2);border:1px solid var(--line);padding:12px;text-align:center}
+.dial svg{width:110px;height:110px}
+.dial .lbl{font:600 10px var(--hud);letter-spacing:.2em;color:var(--mut)}
+.dial .sub{font-size:12px;color:var(--mut)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{font:600 10px var(--hud);letter-spacing:.18em;color:var(--mut);text-align:left;padding:8px 6px;border-bottom:1px solid var(--line)}
+td{padding:7px 6px;border-bottom:1px solid rgba(0,212,255,.08)}
+td.n{font-family:var(--mono);font-size:12.5px}
+.bar{height:5px;background:rgba(0,212,255,.12);margin-top:3px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--cyan),var(--cyan2));box-shadow:0 0 8px var(--cyan)}
+.scroll-x{overflow-x:auto}
+
+/* ---------- logs */
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.src{background:transparent;border:1px solid var(--line);padding:6px 10px;cursor:pointer;font-size:13px;font-weight:600;color:var(--mut)}
+.src.on{color:#001018;background:var(--cyan);border-color:var(--cyan);box-shadow:0 0 12px rgba(0,212,255,.4)}
+select,.search{background:rgba(0,0,0,.4);border:1px solid var(--line);color:var(--text);padding:6px 8px;font:600 13px Rajdhani,sans-serif}
+.search{min-width:160px;flex:1}
+.term{background:#010509;border:1px solid var(--line);height:min(58vh,560px);overflow:auto;padding:12px;font:400 12.5px/1.55 var(--mono);white-space:pre-wrap;word-break:break-all}
+.term .e{color:#ff7b7b}.term .w{color:#ffc75a}.term .i{color:#9bd8ff}.term .d{color:#5f7f93}
+.term mark{background:var(--gold);color:#000}
+.term-status{display:flex;justify-content:space-between;font-size:12px;color:var(--mut);margin-top:6px;gap:10px;flex-wrap:wrap}
+
+/* ---------- activity */
+.tl{list-style:none;margin:0;padding:0}
+.tl li{display:grid;grid-template-columns:150px 1fr;gap:12px;padding:9px 0;border-bottom:1px solid rgba(0,212,255,.08);font-size:14px}
+.tl time{color:var(--mut);font-family:var(--mono);font-size:12px}
+.ev{font:700 10px var(--hud);letter-spacing:.18em;padding:2px 7px;border:1px solid currentColor;margin-right:8px}
+.ev.start{color:var(--green)}.ev.stop{color:var(--red)}.ev.logs{color:var(--cyan)}.ev.login{color:var(--mut)}.ev.login_failed{color:var(--gold)}
+
+/* ---------- misc */
+.offline{border:1px dashed var(--line2);padding:30px;text-align:center;color:var(--mut)}
+.offline b{display:block;font:700 13px var(--hud);letter-spacing:.2em;color:var(--red);margin-bottom:6px}
+.loading{color:var(--mut);font:600 12px var(--hud);letter-spacing:.2em;padding:20px 0}
+.loading:after{content:"";display:inline-block;width:12px;height:12px;margin-left:10px;border:2px solid var(--cyan);border-right-color:transparent;border-radius:50%;animation:spin .8s linear infinite;vertical-align:-2px}
+.act{background:rgba(0,212,255,.1);border:1px solid var(--cyan);color:var(--cyan2);padding:7px 12px;cursor:pointer;font:700 10px var(--hud);letter-spacing:.2em}
+.act:hover{background:rgba(0,212,255,.22)}
+.act:disabled{opacity:.4;cursor:default}
+.modal{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.7);display:none;place-items:center;padding:16px}
+.modal.open{display:grid;animation:fade .2s}
+.modal .box{width:min(420px,100%);background:#06121d;border:1px solid var(--red);padding:22px;box-shadow:0 0 50px rgba(255,59,59,.25)}
+.modal h4{margin:0 0 8px;font:900 16px var(--hud);letter-spacing:.2em;color:var(--red)}
+.modal p{color:var(--text);margin:0 0 14px}
+.modal input{width:100%;padding:10px;background:#000;border:1px solid rgba(255,59,59,.5);color:#fff;font:600 16px var(--mono)}
+.modal .btns{display:flex;gap:10px;margin-top:14px;justify-content:flex-end}
+.kill-btn{background:var(--red);border:none;color:#fff;padding:9px 14px;font:700 11px var(--hud);letter-spacing:.2em;cursor:pointer}
+.kill-btn:disabled{opacity:.35;cursor:default}
+.toasts{position:fixed;right:16px;bottom:16px;z-index:60;display:grid;gap:8px;max-width:calc(100vw - 32px)}
+.toast{background:#06121d;border:1px solid var(--cyan);border-left-width:4px;padding:10px 14px;min-width:240px;box-shadow:0 0 24px rgba(0,212,255,.2);animation:rise .3s}
+.toast.err{border-color:var(--red)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <svg class="mini-reactor" viewBox="0 0 200 200" aria-hidden="true">
+      <defs><radialGradient id="rg"><stop offset="0" stop-color="#e9fdff"/><stop offset=".35" stop-color="#7df6ff"/><stop offset="1" stop-color="#00d4ff" stop-opacity="0"/></radialGradient></defs>
+      <g class="spin"><circle cx="100" cy="100" r="82" fill="none" stroke="#00d4ff" stroke-width="10" stroke-dasharray="34 12"/></g>
+      <g class="spin rev"><circle cx="100" cy="100" r="62" fill="none" stroke="#7df6ff" stroke-width="3" stroke-dasharray="5 9"/></g>
+      <circle class="core" cx="100" cy="100" r="40" fill="url(#rg)"/>
+    </svg>
+    <div class="brand"><h1>C.O.R.E.</h1><div>Codly Operations &amp; Response Engine</div></div>
+    <div class="hdr-right">
+      <div class="clock" id="clock">--:--:--</div>
+      <button class="hbtn" id="voiceBtn" title="Voice responses">VOICE</button>
+      <button class="hbtn" id="outBtn">SIGN OUT</button>
+    </div>
+  </header>
+
+  <div class="greet"><b id="greet" class="typing"></b><span id="summary">Scanning systems…</span></div>
+  <div class="grid" id="grid">
+    <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
+  </div>
+</div>
+
+<!-- detail bay -->
+<section class="bay" id="bay" aria-modal="true" role="dialog">
+  <div class="bay-inner">
+    <div class="bay-head">
+      <button class="back" id="backBtn">◂ ALL SYSTEMS</button>
+      <div><div class="code" id="dCode"></div><h2 id="dTitle"></h2></div>
+      <span class="chip" id="dState"></span>
+      <span class="iid" id="dIid"></span>
+    </div>
+    <div class="layout">
+      <div>
+        <div class="panel corner">
+          <h3>IGNITION</h3>
+          <div class="engine-wrap">
+            <button class="engine" id="engine" aria-label="Engine start stop">
+              <svg viewBox="0 0 234 234" aria-hidden="true">
+                <circle cx="117" cy="117" r="110" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="5"/>
+                <circle id="holdRing" cx="117" cy="117" r="110" fill="none" stroke="var(--fg,#00d4ff)" stroke-width="5"
+                        stroke-linecap="round" stroke-dasharray="691" stroke-dashoffset="691" transform="rotate(-90 117 117)"
+                        style="filter:drop-shadow(0 0 6px var(--fg,#00d4ff))"/>
+              </svg>
+              <span class="face"><span class="t1">ENGINE</span><span class="t2" id="engineWord">START</span><span class="t3" id="engineSub">STOP</span><span class="led"></span></span>
+            </button>
+            <div class="hold-hint" id="holdHint">HOLD TO START</div>
+          </div>
+          <div id="dangerNote"></div>
+        </div>
+        <div class="panel" style="margin-top:14px">
+          <h3>SPECIFICATIONS</h3>
+          <dl class="specs" id="specs"></dl>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="tabs" role="tablist">
+          <button class="tab on" data-tab="telemetry">TELEMETRY</button>
+          <button class="tab" data-tab="diag">DIAGNOSTICS</button>
+          <button class="tab" data-tab="logs">LOGS</button>
+          <button class="tab" data-tab="activity">ACTIVITY</button>
+        </div>
+        <div class="pane on" id="p-telemetry"></div>
+        <div class="pane" id="p-diag"></div>
+        <div class="pane" id="p-logs">
+          <div class="toolbar" id="srcBar"></div>
+          <div class="toolbar">
+            <select id="otherSel" aria-label="Other container"><option value="">Other container…</option></select>
+            <select id="linesSel" aria-label="Lines"><option>100</option><option selected>200</option><option>500</option><option>999</option></select>
+            <select id="filterSel" aria-label="Filter"><option value="all">All lines</option><option value="errors">Errors only</option></select>
+            <input class="search" id="searchBox" placeholder="Highlight text…" aria-label="Highlight text">
+            <button class="act" id="refreshLogs">REFRESH</button>
+            <button class="hbtn" id="autoBtn">AUTO 10s</button>
+            <button class="hbtn" id="copyBtn">COPY</button>
+            <button class="hbtn" id="dlBtn">SAVE</button>
+          </div>
+          <div class="term" id="term"></div>
+          <div class="term-status"><span id="termInfo">Select a source, sir.</span><span id="termTime"></span></div>
+        </div>
+        <div class="pane" id="p-activity"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="modal" id="modal">
+  <div class="box">
+    <h4>CONFIRM SHUTDOWN</h4>
+    <p id="modalText"></p>
+    <input id="modalInput" autocomplete="off" spellcheck="false">
+    <div class="btns"><button class="hbtn" id="modalCancel">ABORT</button><button class="kill-btn" id="modalOk" disabled>POWER DOWN</button></div>
+  </div>
+</div>
+<div class="toasts" id="toasts"></div>
+
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+const H = {"Content-Type": "application/json", "X-Requested-With": "core-console"};
+const HOLD_MS = 1200;
+const TRANSITIONAL = ["pending", "stopping", "shutting-down"];
+let servers = [], current = null, pollTimer = null, autoTimer = null, logText = "", logSource = null, containersLoaded = false;
+
+/* ---------- helpers */
+function el(tag, cls, text) { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
+async function api(path, opts = {}) {
+  const r = await fetch(path, opts);
+  if (r.status === 401) { location.reload(); throw new Error("signed out"); }
+  const data = r.headers.get("content-type")?.includes("json") ? await r.json() : null;
+  if (!r.ok) throw new Error((data && data.error) || ("HTTP " + r.status));
+  return data;
+}
+function toast(msg, err) { const t = el("div", "toast" + (err ? " err" : ""), msg); $("toasts").append(t); setTimeout(() => t.remove(), 5200); }
+function bytes(n) { if (!n && n !== 0) return "—"; const u = ["B","KB","MB","GB","TB"]; let i = 0; while (n >= 1024 && i < 4) { n /= 1024; i++; } return n.toFixed(n < 10 && i ? 1 : 0) + " " + u[i]; }
+function since(iso) {
+  if (!iso) return "—"; let s = Math.max(0, (Date.now() - new Date(iso)) / 1000);
+  const d = Math.floor(s / 86400); s %= 86400; const h = Math.floor(s / 3600); const m = Math.floor((s % 3600) / 60);
+  return (d ? d + "d " : "") + (h || d ? h + "h " : "") + m + "m";
+}
+function stateClass(s) { return "s-" + (s || "unknown"); }
+
+/* ---------- voice */
+let voiceOn = false;
+try { voiceOn = localStorage.getItem("core_voice") === "1"; } catch (e) {}
+function setVoiceBtn() { $("voiceBtn").classList.toggle("on", voiceOn); $("voiceBtn").textContent = voiceOn ? "VOICE ON" : "VOICE"; }
+function say(text) {
+  if (!voiceOn || !("speechSynthesis" in window)) return;
+  const u = new SpeechSynthesisUtterance(text);
+  const v = speechSynthesis.getVoices().find(v => /en-GB/i.test(v.lang) && /male|daniel|george|arthur/i.test(v.name))
+         || speechSynthesis.getVoices().find(v => /en-GB/i.test(v.lang));
+  if (v) u.voice = v; u.rate = 1.02; u.pitch = .9; speechSynthesis.cancel(); speechSynthesis.speak(u);
+}
+$("voiceBtn").onclick = () => { voiceOn = !voiceOn; try { localStorage.setItem("core_voice", voiceOn ? "1" : "0"); } catch (e) {} setVoiceBtn(); say("Voice interface online, sir."); };
+setVoiceBtn();
+
+/* ---------- header */
+function tick() { $("clock").textContent = new Date().toLocaleTimeString([], {hour12: false}); }
+setInterval(tick, 1000); tick();
+function typeGreeting() {
+  const h = new Date().getHours();
+  const text = (h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening") + ", sir.";
+  let i = 0; const g = $("greet");
+  const t = setInterval(() => { g.textContent = text.slice(0, ++i); if (i >= text.length) { clearInterval(t); setTimeout(() => g.classList.remove("typing"), 1500); } }, 45);
+}
+typeGreeting();
+$("outBtn").onclick = async () => { await fetch("/api/logout", {method: "POST", headers: H}); location.reload(); };
+
+/* ---------- gauge svg for cards */
+function gaugeSvg(state) {
+  const ns = "http://www.w3.org/2000/svg";
+  const s = document.createElementNS(ns, "svg"); s.setAttribute("viewBox", "0 0 100 100"); s.setAttribute("class", "gauge");
+  s.innerHTML =
+    '<circle cx="50" cy="50" r="46" fill="none" stroke="rgba(0,212,255,.15)" stroke-width="1.5"/>' +
+    '<g class="ring-rot"><circle cx="50" cy="50" r="40" fill="none" stroke="var(--c)" stroke-width="5" stroke-dasharray="18 7" opacity=".9"/></g>' +
+    '<circle cx="50" cy="50" r="30" fill="none" stroke="var(--c)" stroke-opacity=".25" stroke-width="8"/>' +
+    '<path d="M50 34 v14 M41 39 a15 15 0 1 0 18 0" fill="none" stroke="var(--c)" stroke-width="3.5" stroke-linecap="round"/>';
+  return s;
+}
+
+/* ---------- overview grid */
+function renderGrid() {
+  const grid = $("grid"); grid.replaceChildren();
+  servers.forEach((s, i) => {
+    const c = el("div", "card " + stateClass(s.state)); c.tabIndex = 0; c.style.animationDelay = (i * 70) + "ms";
+    c.setAttribute("role", "button"); c.setAttribute("aria-label", "Open " + s.label);
+    if (s.danger) c.append(el("span", "danger-tag", "PROD"));
+    c.append(el("div", "code", s.codename), el("h2", null, s.label), el("div", "note", s.note));
+    const row = el("div", "row"); row.append(gaugeSvg(s.state));
+    const meta = el("div", "meta");
+    const st = el("div", "state-txt", (s.state || "unknown").toUpperCase());
+    meta.append(st);
+    const l1 = el("div"); l1.append("Type ", el("b", null, s.type || "—")); meta.append(l1);
+    const l2 = el("div"); l2.append(s.state === "running" ? "Up " : "Since ", el("b", null, s.state === "running" ? since(s.launched) : "—")); meta.append(l2);
+    const l3 = el("div"); l3.append("IP ", el("b", null, s.private_ip || "—")); meta.append(l3);
+    row.append(meta); c.append(row);
+    c.onclick = () => openBay(s.key);
+    c.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openBay(s.key); } };
+    grid.append(c);
+  });
+  const up = servers.filter(s => s.state === "running").length;
+  $("summary").textContent = up + " of " + servers.length + " systems online." + (up === servers.length ? " All systems nominal." : "");
+}
+async function loadServers() {
+  servers = await api("/api/servers");
+  renderGrid();
+  if (current) { const s = servers.find(x => x.key === current.key); if (s) { Object.assign(current, s); renderBayHead(); } }
+  schedulePoll();
+}
+function schedulePoll() {
+  clearTimeout(pollTimer);
+  const busy = servers.some(s => TRANSITIONAL.includes(s.state));
+  pollTimer = setTimeout(() => loadServers().catch(() => schedulePoll()), busy ? 4000 : 30000);
+}
+
+/* ---------- detail bay */
+async function openBay(key) {
+  const s = servers.find(x => x.key === key); if (!s) return;
+  current = {...s}; containersLoaded = false; logSource = null; logText = ""; stopAuto();
+  $("bay").classList.add("open"); document.body.style.overflow = "hidden";
+  renderBayHead(); renderSpecs(); selectTab("telemetry");
+  $("p-telemetry").replaceChildren(el("div", "loading", "ACQUIRING TELEMETRY"));
+  $("p-diag").replaceChildren(); $("p-activity").replaceChildren();
+  $("term").replaceChildren(); $("termInfo").textContent = "Select a source, sir."; $("termTime").textContent = "";
+  renderSources();
+  say("Opening " + s.label + ". Status: " + s.state + ".");
+  try {
+    const d = await api("/api/servers/" + key);
+    if (!current || current.key !== key) return;
+    Object.assign(current, d); renderBayHead(); renderSpecs(); renderTelemetry(); renderSources();
+  } catch (e) { $("p-telemetry").replaceChildren(el("div", "offline", "Telemetry unavailable: " + e.message)); }
+}
+function closeBay() { $("bay").classList.remove("open"); document.body.style.overflow = ""; current = null; stopAuto(); }
+$("backBtn").onclick = closeBay;
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("modal").classList.contains("open")) closeBay(); });
+
+function renderBayHead() {
+  const s = current; if (!s) return;
+  $("dCode").textContent = s.codename; $("dTitle").textContent = s.label;
+  const chip = $("dState"); chip.textContent = (s.state || "unknown").toUpperCase(); chip.parentElement.className = "bay-head " + stateClass(s.state);
+  chip.style.setProperty("--c", getComputedStyle(chip.parentElement).getPropertyValue("--c"));
+  $("dIid").textContent = s.instance_id || "";
+  const eng = $("engine"), word = $("engineWord"), sub = $("engineSub"), hint = $("holdHint");
+  eng.className = "engine idle-pulse"; eng.disabled = false;
+  if (s.state === "running") { eng.classList.add("kill"); word.textContent = "STOP"; sub.textContent = "ENGINE ON"; hint.textContent = "HOLD TO POWER DOWN"; }
+  else if (s.state === "stopped") { eng.classList.add("go"); word.textContent = "START"; sub.textContent = "STOP"; hint.textContent = "HOLD TO IGNITE"; }
+  else { eng.classList.add("wait"); eng.disabled = true; word.textContent = "WAIT"; sub.textContent = (s.state || "").toUpperCase(); hint.textContent = "SEQUENCE IN PROGRESS"; }
+  const dn = $("dangerNote"); dn.replaceChildren();
+  if (s.danger) dn.append(el("div", "danger-note", "⚠ " + s.note));
+}
+function renderSpecs() {
+  const s = current, dl = $("specs"); dl.replaceChildren();
+  const add = (k, v, mono) => { dl.append(el("dt", null, k)); dl.append(el("dd", mono ? "mono" : null, v == null || v === "" ? "—" : String(v))); };
+  add("NAME", s.name); add("TYPE", s.type);
+  if (s.specs) add("CAPACITY", s.specs.vcpus + " vCPU · " + s.specs.memory_gib + " GiB");
+  add("ZONE", s.az); add("PRIVATE IP", s.private_ip, true); add("PUBLIC IP", s.public_ip, true);
+  add("UPTIME", s.state === "running" ? since(s.launched) : "offline");
+  add("LAUNCHED", s.launched ? new Date(s.launched).toLocaleString() : "");
+  add("PLATFORM", s.platform + (s.arch ? " · " + s.arch : ""));
+  add("ACCOUNT", s.account, true);
+  (s.volumes || []).forEach((v, i) => add("VOLUME " + (i + 1), v.size_gib + " GiB " + v.type + (v.encrypted ? " · enc" : "")));
+}
+
+/* ---------- ignition: press and hold */
+(function engine() {
+  const btn = $("engine"), ring = $("holdRing"), FULL = 691;
+  let t0 = 0, raf = 0;
+  const reset = () => { cancelAnimationFrame(raf); raf = 0; ring.style.strokeDashoffset = FULL; };
+  const step = (t) => {
+    const p = Math.min(1, (t - t0) / HOLD_MS);
+    ring.style.strokeDashoffset = FULL * (1 - p);
+    if (p >= 1) { reset(); fire(); return; }
+    raf = requestAnimationFrame(step);
+  };
+  const begin = (e) => { if (btn.disabled || raf) return; e.preventDefault(); t0 = performance.now(); raf = requestAnimationFrame(step); };
+  btn.addEventListener("pointerdown", begin);
+  ["pointerup", "pointerleave", "pointercancel"].forEach(ev => btn.addEventListener(ev, reset));
+  btn.addEventListener("keydown", (e) => { if ((e.key === "Enter" || e.key === " ") && !e.repeat) begin(e); });
+  btn.addEventListener("keyup", reset);
+  btn.addEventListener("click", (e) => e.preventDefault());
+})();
+
+function fire() {
+  if (!current) return;
+  if (current.state === "stopped") return power("start");
+  if (current.state === "running") return askConfirm();
+}
+function askConfirm() {
+  const s = current;
+  $("modalText").textContent = "Sir, this powers down " + s.label + (s.danger ? " — that includes PRODUCTION." : ".") + " Type “" + s.key + "” to proceed.";
+  $("modalInput").value = ""; $("modalOk").disabled = true; $("modal").classList.add("open"); $("modalInput").focus();
+  say("Sir, please confirm the shutdown.");
+}
+$("modalInput").oninput = () => { $("modalOk").disabled = $("modalInput").value !== current.key; };
+$("modalInput").onkeydown = (e) => { if (e.key === "Enter" && !$("modalOk").disabled) $("modalOk").click(); if (e.key === "Escape") $("modalCancel").click(); };
+$("modalCancel").onclick = () => $("modal").classList.remove("open");
+$("modalOk").onclick = () => { $("modal").classList.remove("open"); power("stop", current.key); };
+
+async function power(action, confirm) {
+  const s = current;
+  try {
+    const r = await api("/api/servers/" + s.key + "/power", {method: "POST", headers: H, body: JSON.stringify({action, confirm: confirm || ""})});
+    Object.assign(current, r); renderBayHead();
+    const msg = action === "start" ? "Ignition sequence started. " + s.label + " will be online in about a minute, sir."
+                                   : "Powering down " + s.label + ". As you wish, sir.";
+    toast(msg); say(msg); loadServers();
+  } catch (e) { toast("Unable to comply: " + e.message, true); say("I'm afraid I can't do that, sir."); }
+}
+
+/* ---------- tabs */
+document.querySelectorAll(".tab").forEach(b => b.onclick = () => selectTab(b.dataset.tab));
+function selectTab(name) {
+  document.querySelectorAll(".tab").forEach(b => b.classList.toggle("on", b.dataset.tab === name));
+  document.querySelectorAll(".pane").forEach(p => p.classList.toggle("on", p.id === "p-" + name));
+  if (!current) return;
+  if (name === "diag" && !$("p-diag").childElementCount) loadDiag();
+  if (name === "activity") loadActivity();
+  if (name === "logs" && !logSource && current.sources?.length && current.state === "running") pickSource({kind: "source", id: current.sources[0].id, label: current.sources[0].label});
+  if (name === "logs" && !containersLoaded && current.state === "running") loadContainers();
+}
+function offline(pane, what) {
+  const box = el("div", "offline"); box.append(el("b", null, "SYSTEMS OFFLINE"), document.createTextNode(what + " needs the server running, sir. Hold the ignition to start it."));
+  pane.replaceChildren(box);
+}
+
+/* ---------- telemetry */
+function lineChart(points, unit) {
+  const W = 300, Hh = 70, ns = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(ns, "svg"); svg.setAttribute("viewBox", "0 0 " + W + " " + Hh); svg.setAttribute("preserveAspectRatio", "none");
+  if (points.length < 2) { const t = document.createElementNS(ns, "text"); t.setAttribute("x", 8); t.setAttribute("y", 40); t.setAttribute("fill", "#5f8aa3"); t.setAttribute("font-size", "12"); t.textContent = "No data in the last 6h"; svg.append(t); return svg; }
+  const xs = points.map(p => p[0]), ys = points.map(p => p[1]);
+  const x0 = Math.min(...xs), x1 = Math.max(...xs), yMax = unit === "%" ? 100 : Math.max(...ys) * 1.15 || 1;
+  const X = v => ((v - x0) / (x1 - x0 || 1)) * W, Y = v => Hh - 4 - (v / yMax) * (Hh - 8);
+  const d = points.map((p, i) => (i ? "L" : "M") + X(p[0]).toFixed(1) + " " + Y(p[1]).toFixed(1)).join(" ");
+  const id = "g" + Math.random().toString(36).slice(2);
+  svg.innerHTML =
+    '<defs><linearGradient id="' + id + '" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#00d4ff" stop-opacity=".45"/><stop offset="1" stop-color="#00d4ff" stop-opacity="0"/></linearGradient></defs>' +
+    '<path d="' + d + " L" + W + " " + Hh + " L0 " + Hh + ' Z" fill="url(#' + id + ')"/>' +
+    '<path d="' + d + '" fill="none" stroke="#7df6ff" stroke-width="1.6" vector-effect="non-scaling-stroke" style="filter:drop-shadow(0 0 3px #00d4ff)"/>';
+  return svg;
+}
+function fmtVal(v, unit) { return unit === "%" ? v.toFixed(1) + "%" : bytes(v) + "/5m"; }
+function renderTelemetry() {
+  const pane = $("p-telemetry"); pane.replaceChildren();
+  const series = current.telemetry || [];
+  if (!series.length) { pane.append(el("div", "offline", "No telemetry available.")); return; }
+  const wrap = el("div", "charts");
+  series.forEach(sr => {
+    const c = el("div", "chart"); const last = sr.points.length ? sr.points[sr.points.length - 1][1] : null;
+    const peak = sr.points.length ? Math.max(...sr.points.map(p => p[1])) : null;
+    c.append(el("div", "lbl", sr.label.toUpperCase() + " · 6H"), el("div", "val", last == null ? "—" : fmtVal(last, sr.unit)), lineChart(sr.points, sr.unit));
+    const r = el("div", "rng"); r.append(el("span", null, "6h ago"), el("span", null, peak == null ? "" : "peak " + fmtVal(peak, sr.unit)), el("span", null, "now")); c.append(r);
+    wrap.append(c);
+  });
+  pane.append(wrap);
+  if (!series.some(s => s.id === "mem")) pane.append(el("div", "term-status", "Memory and disk history need the CloudWatch agent on this host. Live values are under DIAGNOSTICS."));
+}
+
+/* ---------- diagnostics */
+function dial(label, pct, sub) {
+  const d = el("div", "dial"), ns = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(ns, "svg"); svg.setAttribute("viewBox", "0 0 120 120");
+  const col = pct > 85 ? "#ff3b3b" : pct > 65 ? "#ffb627" : "#00d4ff", C = 2 * Math.PI * 48;
+  svg.innerHTML =
+    '<circle cx="60" cy="60" r="48" fill="none" stroke="rgba(0,212,255,.12)" stroke-width="10"/>' +
+    '<circle cx="60" cy="60" r="48" fill="none" stroke="' + col + '" stroke-width="10" stroke-linecap="round" transform="rotate(-90 60 60)" stroke-dasharray="' + C + '" stroke-dashoffset="' + (C * (1 - Math.min(pct, 100) / 100)) + '" style="transition:stroke-dashoffset 1s;filter:drop-shadow(0 0 6px ' + col + ')"/>' +
+    '<text x="60" y="66" text-anchor="middle" fill="#e6f9ff" font-family="Orbitron" font-weight="700" font-size="20">' + Math.round(pct) + '%</text>';
+  d.append(svg, el("div", "lbl", label), el("div", "sub", sub)); return d;
+}
+async function loadDiag() {
+  const pane = $("p-diag");
+  if (current.state !== "running") return offline(pane, "Live diagnostics");
+  pane.replaceChildren(el("div", "loading", "RUNNING DIAGNOSTICS OVER SSM"));
+  try {
+    const r = await api("/api/servers/" + current.key + "/live");
+    if (!r.ok) { pane.replaceChildren(el("div", "offline", "Diagnostics failed: " + r.error)); return; }
+    pane.replaceChildren();
+    const bar = el("div", "toolbar"); const again = el("button", "act", "RE-SCAN"); again.onclick = loadDiag;
+    bar.append(again, el("span", "iid", (r.os || "") + " · booted " + (r.boot || "?"))); pane.append(bar);
+    const dials = el("div", "dials");
+    dials.append(
+      dial("LOAD / CPU", (r.load[0] / r.cpus) * 100, r.load.map(v => v.toFixed(2)).join(" · ") + " on " + r.cpus + " cpu"),
+      dial("MEMORY", (r.mem.used / r.mem.total) * 100, bytes(r.mem.used) + " / " + bytes(r.mem.total)),
+      dial("DISK /", (r.disk.used / r.disk.total) * 100, bytes(r.disk.free) + " free of " + bytes(r.disk.total)));
+    pane.append(dials);
+    if (r.containers.length) {
+      const box = el("div", "scroll-x"), t = el("table"), hd = el("tr");
+      ["CONTAINER", "CPU", "MEMORY", "NET I/O", "PIDS"].forEach(h => hd.append(el("th", null, h)));
+      t.append(hd);
+      r.containers.forEach(c => {
+        const tr = el("tr"); const name = el("td"); name.append(el("div", null, c.name));
+        const cpu = el("td", "n", c.cpu); const b = el("div", "bar"); const i = el("i"); i.style.width = Math.min(100, parseFloat(c.cpu) || 0) + "%"; b.append(i); cpu.append(b);
+        tr.append(name, cpu, el("td", "n", c.mem), el("td", "n", c.net), el("td", "n", c.pids)); t.append(tr);
+      });
+      box.append(t); pane.append(box);
+    }
+    say("Diagnostics complete, sir.");
+  } catch (e) { pane.replaceChildren(el("div", "offline", "Diagnostics failed: " + e.message)); }
+}
+
+/* ---------- logs */
+function renderSources() {
+  const bar = $("srcBar"); bar.replaceChildren();
+  (current.sources || []).forEach(src => {
+    const b = el("button", "src" + (logSource && logSource.kind === "source" && logSource.id === src.id ? " on" : ""), src.label);
+    b.onclick = () => pickSource({kind: "source", id: src.id, label: src.label}); bar.append(b);
+  });
+  if (!(current.sources || []).length) bar.append(el("span", "iid", "No preset sources — pick a container below."));
+}
+async function loadContainers() {
+  containersLoaded = true;
+  try {
+    const list = await api("/api/servers/" + current.key + "/containers");
+    const sel = $("otherSel"); sel.replaceChildren(new Option("Other container…", ""));
+    list.forEach(c => sel.append(new Option(c.name + (c.state === "running" ? "" : " (" + c.state + ")"), c.name)));
+    if (!logSource && !(current.sources || []).length && list.length) pickSource({kind: "container", id: list[0].name, label: list[0].name});
+  } catch (e) { containersLoaded = false; }
+}
+$("otherSel").onchange = (e) => { if (e.target.value) pickSource({kind: "container", id: e.target.value, label: e.target.value}); };
+function pickSource(src) { logSource = src; renderSources(); if (src.kind === "source") $("otherSel").value = ""; loadLogs(); }
+async function loadLogs() {
+  if (!current || !logSource) return;
+  if (current.state !== "running") { const b = el("div", "offline"); b.append(el("b", null, "SYSTEMS OFFLINE"), "Logs need the server running, sir."); $("term").replaceChildren(b); return; }
+  const q = new URLSearchParams({lines: $("linesSel").value, filter: $("filterSel").value});
+  q.set(logSource.kind === "source" ? "source" : "container", logSource.id);
+  $("termInfo").textContent = "Fetching " + logSource.label + "…"; $("refreshLogs").disabled = true;
+  try {
+    const r = await api("/api/servers/" + current.key + "/logs?" + q);
+    logText = r.text || "(no output)";
+    renderLog();
+    $("termInfo").textContent = logSource.label + " · " + logText.split("\n").length + " lines" + (r.ok ? "" : " · " + r.status);
+    $("termTime").textContent = "updated " + new Date().toLocaleTimeString();
+  } catch (e) { $("termInfo").textContent = "Error: " + e.message; }
+  finally { $("refreshLogs").disabled = false; }
+}
+function renderLog() {
+  const term = $("term"), needle = $("searchBox").value.trim().toLowerCase(), atBottom = term.scrollTop + term.clientHeight >= term.scrollHeight - 30;
+  const frag = document.createDocumentFragment();
+  logText.split("\n").forEach(line => {
+    const cls = /error|exception|traceback|critical|fatal/i.test(line) ? "e" : /warn/i.test(line) ? "w" : /\binfo\b/i.test(line) ? "i" : /debug/i.test(line) ? "d" : "";
+    const span = el("span", cls);
+    if (needle) {
+      const low = line.toLowerCase(); let i = 0, j;
+      while ((j = low.indexOf(needle, i)) !== -1) { span.append(line.slice(i, j), el("mark", null, line.slice(j, j + needle.length))); i = j + needle.length; }
+      span.append(line.slice(i));
+    } else span.textContent = line;
+    frag.append(span, "\n");
+  });
+  term.replaceChildren(frag);
+  if (atBottom || !needle) term.scrollTop = term.scrollHeight;
+}
+$("refreshLogs").onclick = loadLogs;
+$("linesSel").onchange = loadLogs; $("filterSel").onchange = loadLogs;
+$("searchBox").oninput = () => { if (logText) renderLog(); };
+function stopAuto() { clearInterval(autoTimer); autoTimer = null; $("autoBtn").classList.remove("on"); }
+$("autoBtn").onclick = () => { if (autoTimer) return stopAuto(); autoTimer = setInterval(loadLogs, 10000); $("autoBtn").classList.add("on"); loadLogs(); };
+$("copyBtn").onclick = async () => { try { await navigator.clipboard.writeText(logText); toast("Copied to clipboard, sir."); } catch (e) { toast("Clipboard unavailable.", true); } };
+$("dlBtn").onclick = () => {
+  if (!logText) return;
+  const a = el("a"); a.href = URL.createObjectURL(new Blob([logText], {type: "text/plain"}));
+  a.download = current.key + "-" + (logSource ? logSource.id : "log") + "-" + new Date().toISOString().slice(0, 19).replace(/:/g, "") + ".log";
+  a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+};
+
+/* ---------- activity */
+async function loadActivity() {
+  const pane = $("p-activity"); pane.replaceChildren(el("div", "loading", "RETRIEVING RECORDS"));
+  try {
+    const rows = await api("/api/activity?key=" + encodeURIComponent(current.key));
+    pane.replaceChildren();
+    if (!rows.length) { pane.append(el("div", "offline", "No recorded activity in the last 3 days, sir.")); return; }
+    const ul = el("ul", "tl");
+    rows.forEach(r => {
+      const li = el("li"); li.append(el("time", null, new Date(r.ts).toLocaleString()));
+      const d = el("div"); d.append(el("span", "ev " + r.event, r.event.replace("_", " ").toUpperCase()));
+      d.append((r.source ? r.source + " · " : "") + "from " + (r.ip || "unknown"));
+      li.append(d); ul.append(li);
+    });
+    pane.append(ul);
+  } catch (e) { pane.replaceChildren(el("div", "offline", "Activity unavailable: " + e.message)); }
+}
+
+/* ---------- boot */
+loadServers().then(() => say(document.getElementById("summary").textContent)).catch(e => { $("summary").textContent = "Systems scan failed: " + e.message; });
+</script>
+</body>
+</html>

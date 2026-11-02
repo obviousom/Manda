@@ -1,0 +1,21 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {"Sid": "Describe", "Effect": "Allow",
+     "Action": ["ec2:DescribeInstances", "ec2:DescribeInstanceTypes", "ec2:DescribeVolumes",
+                "cloudwatch:GetMetricData", "cloudwatch:ListMetrics", "ssm:GetCommandInvocation"],
+     "Resource": "*"},
+    {"Sid": "PowerOwnInstances", "Effect": "Allow",
+     "Action": ["ec2:StartInstances", "ec2:StopInstances"],
+     "Resource": ["arn:aws:ec2:ap-south-1:603366204162:instance/i-070fa60ad49785f8d",
+                  "arn:aws:ec2:ap-south-1:603366204162:instance/i-0e5d43cddb36a407c"]},
+    {"Sid": "ConsoleDocumentOnly", "Effect": "Allow",
+     "Action": "ssm:SendCommand",
+     "Resource": ["arn:aws:ssm:ap-south-1:603366204162:document/Codly-ServerConsole",
+                  "arn:aws:ec2:ap-south-1:603366204162:instance/i-070fa60ad49785f8d",
+                  "arn:aws:ec2:ap-south-1:603366204162:instance/i-0e5d43cddb36a407c"]},
+    {"Sid": "OtherAccount", "Effect": "Allow",
+     "Action": "sts:AssumeRole",
+     "Resource": "arn:aws:iam::647121335538:role/codly-server-console-xacct"}
+  ]
+}
